@@ -17,7 +17,7 @@ import DeductionUser from '../pages/user/DeductionUser'
 import DashboardSuperAdmin from '../pages/superadmin/DashboardSuperAdmin'
 import AdminCategory from '../pages/admin/AdminCategory'
 import AdminInvestment from '../pages/admin/AdminDeduction'
-import Formdetail from '../pages/user/formdetail'
+import Formdetail from '../pages/user/Formdetail'
 import AdminActivityLog from '../pages/admin/AdminActivityLog'
 import ChangePassword from '../pages/auth/ChangePassword'
 
