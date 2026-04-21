@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  admin
+  superadmin
+}
+
+enum EntryType {
+  income
+  expense
+}
+
+model ActivityLog {
+  id        Int     @id @default(autoincrement())
+  action    String // เช่น "LOGIN", "CREATE_ENTRY", "DELETE_USER"
+  detail    String? // รายละเอียดเพิ่มเติม
+  ipAddress String?
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        Int           @id @default(autoincrement())
+  username  String
+  email     String        @unique
+  password  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime?     @default(now()) @updatedAt
+  role      Role          @default(user)
+  enabled   Boolean       @default(true)
+  logs      ActivityLog[]
+  entries   Entry[]
+
+  taxRecords       TaxCalculation[]
+  DeductionProfile DeductionProfile[]
+  categories       Category[]
+  goal             Goal?
+  budgets          Budget[]
+  installments     Installment[]
+}
+
+model Category {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  type  EntryType
+  color String?
+  icon  String?
+
+  entries Entry[]
+
+  user    User?    @relation(fields: [userId], references: [id])
+  userId  Int?
+  budgets Budget[]
+}
+
+// --- Models ---
+
+model TaxCalculation {
+  id             Int      @id @default(autoincrement())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         Int
+  taxableIncome  Float
+  taxPaid        Float
+  deduction      Float?
+  calculatedDate DateTime
+}
+
+model Entry {
+  id            Int       @id @default(autoincrement())
+  date          DateTime
+  type          EntryType
+  amount        Float
+  note          String?
+  source        String?
+  total         Float?
+  income_total  Float?
+  expense_total Float?
+  tax           Float?
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int
+}
+
+// 1. ตารางกองทุน (Admin เป็นคนสร้าง)
+model FundType {
+  id              Int              @id @default(autoincrement())
+  code            String           @unique // เช่น CHILD, RMF, SSF
+  name            String
+  taxLimit        Float // เพดานเงิน หรือ เงินต่อหัว
+  category        String // family, insurance, investment, discountfund
+  isFixed         Boolean          @default(false)
+  isCount         Boolean          @default(false) // 👈 ถ้า true = นับจำนวนคน
+  expectedReturn  Float            @default(0)
+  incomeLimitRate Float            @default(0)
+  hasDividend     Boolean          @default(false) // 👈 เพิ่มตัวนี้ (มีปันผลไหม)
+  investments     UserInvestment[]
+}
+
+// 2. ตารางโปรไฟล์ภาษี (เก็บค่าลดหย่อนพื้นฐาน)
+model DeductionProfile {
+  id             Int              @id @default(autoincrement())
+  userId         Int
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taxYear        Int
+  // personal    Decimal @default(60000) @db.Decimal(10, 2)
+  investments    UserInvestment[]
+  deductionItems DeductionItem[]
+
+  @@unique([userId, taxYear])
+}
+
+// 3. ตารางเก็บยอดซื้อจริงของ User (Master-Detail)
+model UserInvestment {
+  id       Int     @id @default(autoincrement())
+  amount   Decimal @db.Decimal(10, 2)
+  quantity Int     @default(1) // 👈 เก็บจำนวนคน เช่น ลูกแท้ 2 คน
+
+  profileId  Int
+  profile    DeductionProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  fundTypeId Int
+  fundType   FundType         @relation(fields: [fundTypeId], references: [id])
+
+  @@unique([profileId, fundTypeId])
+}
+
+model DeductionItem {
+  id                 Int              @id @default(autoincrement())
+  deductionProfile   DeductionProfile @relation(fields: [deductionProfileId], references: [id], onDelete: Cascade)
+  deductionProfileId Int
+  type               String // ประเภทเพิ่มเติม
+  amount             Decimal          @db.Decimal(10, 2)
+}
+
+model Goal {
+  id            Int      @id @default(autoincrement())
+  salary        Float
+  savingsTarget Float
+  totalGoal     Float?
+  isPercentage  Boolean
+  monthlyLimit  Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id     Int     @id @default(autoincrement())
+  name   String?
+  amount Decimal @db.Decimal(10, 2)
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Installment {
+  id            Int       @id @default(autoincrement())
+  name          String
+  totalPrice    Decimal   @db.Decimal(10, 2)
+  monthlyAmount Decimal   @db.Decimal(10, 2)
+  totalTerms    Int
+  currentTerm   Int       @default(0)
+  startDate     DateTime
+  lastPaidDate  DateTime?
+  status        String    @default("ACTIVE")
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
