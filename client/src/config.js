@@ -5,5 +5,5 @@
 // export const BASE_API_URL = "http://192.168.10.123:5001/api";
 
 //home
-export const BASE_API_URL = "http://192.168.1.108:5001/api"
+export const BASE_API_URL = "https://myfinance-ss07.onrender.com/api"
 
