@@ -38,12 +38,20 @@ const ReportPage = () => {
   const navigate = useNavigate();
   const token = useEcomStore((state) => state.token);
   const currentYear = new Date().getFullYear();
+  const [yearSummary, setYearSummary] = useState(null);
+  const openingBalance = yearSummary?.openingBalance || 0;
+
+
+
+  const [startYear, setStartYear] = useState(currentYear - 1);
+  const [endYear, setEndYear] = useState(currentYear);
 
   useEffect(() => {
     if (!token) {
       setLoading(false);
       return;
     }
+
 
     const fetchData = async () => {
       setLoading(true);
@@ -56,10 +64,14 @@ const ReportPage = () => {
           api.get('/installment') // ✅ ดึงข้อมูลยอดผ่อนชำระ
         ]);
 
+
         setIncomes(incomeRes.data);
         setExpenses(expenseRes.data);
         setTotals(totalsRes.data);
         setInstallments(installmentRes.data || []); // ✅ บันทึกข้อมูลยอดผ่อน
+
+        const summaryRes = await api.get(`/summary/year/${currentYear}`);
+        setYearSummary(summaryRes.data);
 
         // ดึง Goal
         const targetAmount = Number(goalRes.data?.totalGoal) || 0;
@@ -79,7 +91,7 @@ const ReportPage = () => {
     };
 
     fetchData();
-  }, [token]);
+  }, [token, currentYear]);
 
   const monthlyData = useMemo(() => {
     // สร้าง Array ว่าง 12 เดือน [0, 0, ..., 0]
@@ -90,7 +102,7 @@ const ReportPage = () => {
     incomes.forEach(item => {
       const d = new Date(item.date);
       if (d.getFullYear() === currentYear) {
-        incomeByMonth[d.getMonth()] += item.amount;
+        incomeByMonth[d.getMonth()] += Number(item.amount || 0);
       }
     });
 
@@ -98,12 +110,94 @@ const ReportPage = () => {
     expenses.forEach(item => {
       const d = new Date(item.date);
       if (d.getFullYear() === currentYear) {
-        expenseByMonth[d.getMonth()] += item.amount;
+        expenseByMonth[d.getMonth()] += Number(item.amount || 0);
+      }
+    });
+    return { incomeByMonth, expenseByMonth };
+  }, [incomes, expenses, currentYear]);
+
+  const getMonthlyByYear = (year) => {
+    const income = Array(12).fill(0);
+    const expense = Array(12).fill(0);
+
+    incomes.forEach(item => {
+      const d = new Date(item.date);
+      if (d.getFullYear() === year) {
+        income[d.getMonth()] += Number(item.amount || 0);
       }
     });
 
-    return { incomeByMonth, expenseByMonth };
-  }, [incomes, expenses, currentYear]);
+    expenses.forEach(item => {
+      const d = new Date(item.date);
+      if (d.getFullYear() === year) {
+        expense[d.getMonth()] += Number(item.amount || 0);
+      }
+    });
+
+    return { income, expense };
+  };
+
+  // ปีย้อนหลัง
+  const yearlyData = useMemo(() => {
+    const map = {};
+
+    incomes.forEach(item => {
+      const year = new Date(item.date).getFullYear();
+      if (!map[year]) map[year] = { income: 0, expense: 0 };
+      map[year].income += Number(item.amount || 0);
+    });
+
+    expenses.forEach(item => {
+      const year = new Date(item.date).getFullYear();
+      if (!map[year]) map[year] = { income: 0, expense: 0 };
+      map[year].expense += Number(item.amount || 0);
+    });
+
+    return map;
+  }, [incomes, expenses]);
+
+  const yearOptions = Object.keys(yearlyData)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+
+  const sortedYears = Object.keys(yearlyData)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  const yearlyChartData = {
+    labels: sortedYears,
+    datasets: [
+      {
+        label: "รายรับ",
+        data: sortedYears.map(year => yearlyData[year].income),
+        backgroundColor: "#10B981",
+      },
+      {
+        label: "รายจ่าย",
+        data: sortedYears.map(year => yearlyData[year].expense),
+        backgroundColor: "#EF4444",
+      }
+    ]
+  };
+
+  const yearlyInsight = useMemo(() => {
+    const years = Object.keys(yearlyData)
+      .map(Number)
+      .sort((a, b) => a - b);
+    if (years.length < 2) return null;
+
+    const lastYear = yearlyData[years[years.length - 2]];
+    const thisYear = yearlyData[years[years.length - 1]];
+
+    const incomeDiff = thisYear.income - lastYear.income;
+    const expenseDiff = thisYear.expense - lastYear.expense;
+
+    return {
+      incomeDiff,
+      expenseDiff
+    };
+  }, [yearlyData]);
 
   // ✅ คำนวณยอดผ่อนรวมต่อเดือน (เฉพาะรายการที่ยังผ่อนไม่จบ)
   const totalMonthlyInstallment = useMemo(() => {
@@ -116,42 +210,78 @@ const ReportPage = () => {
   const totalIncome = useMemo(() =>
     incomes
       .filter(item => new Date(item.date).getFullYear() === currentYear)
-      .reduce((acc, item) => acc + item.amount, 0),
+      .reduce((acc, item) => acc + Number(item.amount || 0), 0),
     [incomes, currentYear]);
 
   const totalExpense = useMemo(() =>
     expenses
       .filter(item => new Date(item.date).getFullYear() === currentYear)
-      .reduce((acc, item) => acc + item.amount, 0),
+      .reduce((acc, item) => acc + Number(item.amount || 0), 0),
     [expenses, currentYear]);
 
   // Config กราฟ
   const getChartData = () => {
     const labels = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
-    return {
-      labels,
-      datasets: [
-        {
-          label: "รายรับ",
-          data: monthlyData.incomeByMonth, // 🚩 ข้อมูล 12 เดือน
-          backgroundColor: "#10B981",
-          borderRadius: 5,
-        },
-        {
-          label: "รายจ่าย",
-          data: monthlyData.expenseByMonth, // 🚩 ข้อมูล 12 เดือน
-          backgroundColor: "#EF4444",
-          borderRadius: 5,
-        },
-      ],
-    };
+    const datasets = [];
+
+    const coolColors = [
+      "#10B981", // green
+      "#3B82F6", // blue
+      "#06B6D4", // cyan
+      "#6366F1", // indigo
+      "#14B8A6", // teal
+    ];
+
+    const warmColors = [
+      "#EF4444", // red
+      "#F97316", // orange
+      "#F59E0B", // amber
+      "#DC2626", // dark red
+      "#EA580C", // deep orange
+    ];
+
+    let colorIndex = 0;
+
+    for (let year = startYear; year <= endYear; year++) {
+      const data = getMonthlyByYear(year);
+
+      const incomeColor = coolColors[colorIndex % coolColors.length];
+      const expenseColor = warmColors[colorIndex % warmColors.length];
+
+      // ✅ รายรับ (โทนเย็น)
+      datasets.push({
+        label: `รายรับ ${year}`,
+        data: data.income,
+        borderColor: incomeColor,
+        backgroundColor: incomeColor,
+        tension: 0.4,
+      });
+
+      // ✅ รายจ่าย (โทนร้อน)
+      datasets.push({
+        label: `รายจ่าย ${year}`,
+        data: data.expense,
+        borderColor: expenseColor,
+        backgroundColor: expenseColor,
+        borderDash: [6, 6], // ทำให้ดูต่างจาก income
+        tension: 0.4,
+      });
+
+      colorIndex++;
+    }
+
+    return { labels, datasets };
   };
 
   const getChartOptions = () => {
     const baseOptions = {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
       plugins: {
         legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'ui-sans-serif, system-ui' } } },
         tooltip: {
@@ -190,6 +320,7 @@ const ReportPage = () => {
   const renderChart = () => {
     const data = getChartData();
     const options = getChartOptions();
+
 
     switch (chartType) {
       case "bar": return <Bar data={data} options={options} />;
@@ -232,7 +363,7 @@ const ReportPage = () => {
                 <div className="p-3 bg-yellow-100 text-yellow-600 rounded-2xl shadow-sm">
                   <Wallet size={20} />
                 </div>
-                <span className="text-sm font-bold text-gray-500">เงินสุทธิรวม</span>
+                <span className="text-sm font-bold text-gray-500">ยอดเงินคงเหลือทั้งหมด</span>
               </div>
               <div className="text-2xl font-extrabold text-gray-800">
                 {totals?.total?.toLocaleString() ?? 0} <span className="text-sm text-gray-400 font-medium">฿</span>
@@ -248,7 +379,7 @@ const ReportPage = () => {
                 <div className="p-3 bg-green-100 text-green-600 rounded-2xl shadow-sm">
                   <ArrowDownRight size={20} />
                 </div>
-                <span className="text-sm font-bold text-gray-500">รายรับ </span>
+                <span className="text-sm font-bold text-gray-500">รายรับปีนี้ </span>
               </div>
               <div className="text-2xl font-extrabold text-green-600">
                 +{totalIncome.toLocaleString()} <span className="text-sm text-gray-400 font-medium">฿</span>
@@ -264,7 +395,7 @@ const ReportPage = () => {
                 <div className="p-3 bg-red-100 text-red-600 rounded-2xl shadow-sm">
                   <ArrowUpRight size={20} />
                 </div>
-                <span className="text-sm font-bold text-gray-500">รายจ่าย </span>
+                <span className="text-sm font-bold text-gray-500">รายจ่ายปีนี้ </span>
               </div>
               <div className="text-2xl font-extrabold text-red-500">
                 -{totalExpense.toLocaleString()} <span className="text-sm text-gray-400 font-medium">฿</span>
@@ -280,7 +411,7 @@ const ReportPage = () => {
                 <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl shadow-sm">
                   <CalendarClock size={20} />
                 </div>
-                <span className="text-sm font-bold text-gray-500">ภาระผ่อน/เดือน</span>
+                <span className="text-sm font-bold text-gray-500">ภาระผ่อนต่อเดือน</span>
               </div>
               <div className="text-2xl font-extrabold text-amber-600">
                 {totalMonthlyInstallment.toLocaleString()} <span className="text-sm text-gray-400 font-medium">฿</span>
@@ -296,17 +427,17 @@ const ReportPage = () => {
                 <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl shadow-sm">
                   <Activity size={20} />
                 </div>
-                <span className="text-sm font-bold text-gray-500">คงเหลือ </span>
+                <span className="text-sm font-bold text-gray-500">เงินเหลือปีนี้ </span>
               </div>
               <div className={`text-2xl font-extrabold ${totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
-                {(totalIncome - totalExpense).toLocaleString()} <span className="text-sm text-gray-400 font-medium">฿</span>
+                {(yearSummary?.net ?? 0).toLocaleString()} <span className="text-sm text-gray-400 font-medium">฿</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* --- Main Content Grid --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
           {/* Chart Section (2/3 width) */}
           <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 ">
@@ -314,7 +445,25 @@ const ReportPage = () => {
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <PieIcon className="text-yellow-500" size={20} /> ภาพรวมการเงิน
               </h2>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={startYear}
+                  onChange={(e) => setStartYear(Number(e.target.value))}
+                  className="border rounded-lg px-2 py-1 text-sm"
+                >
+                  {yearOptions.map(y => <option key={y}>{y}</option>)}
+                </select>
 
+                <span>-</span>
+
+                <select
+                  value={endYear}
+                  onChange={(e) => setEndYear(Math.max(startYear, Number(e.target.value)))}
+                  className="border rounded-lg px-2 py-1 text-sm"
+                >
+                  {yearOptions.map(y => <option key={y}>{y}</option>)}
+                </select>
+              </div>
               <div className="bg-gray-100 p-1.5 rounded-2xl flex flex-wrap gap-1 shadow-sm border">
                 {[
                   { id: 'bar', icon: <BarChart3 size={16} /> },
@@ -333,13 +482,90 @@ const ReportPage = () => {
                   </button>
                 ))}
               </div>
+
             </div>
 
-            <div className="h-[350px] w-full bg-gray-50/30 rounded-2xl border border-gray-50 p-4">
+            <div className="h-[350px] w-full relative bg-gray-50/30 rounded-2xl border border-gray-50 p-4">
               {renderChart()}
             </div>
+
+            {yearlyInsight && (
+
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {/* Income Insight */}
+                <div className={`p-4 rounded-2xl border shadow-sm transition-all hover:shadow-md hover:-translate-y-1
+  ${yearlyInsight.incomeDiff >= 0
+                    ? "bg-blue-50 border-blue-100"
+                    : "bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-600">รายรับ</span>
+                    <div className="text-xs text-gray-400">เทียบกับปีก่อน</div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold
+  ${yearlyInsight.incomeDiff >= 0
+                        ? "bg-blue-100 text-green-700"
+                        : "bg-slate-200 text-red-600"
+                      }`}
+                    >
+                      {yearlyInsight.incomeDiff >= 0 ? "เพิ่มขึ้น" : "ลดลง"}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    {yearlyInsight.incomeDiff >= 0 ? (
+                      <ArrowUpRight className="text-green-500" size={18} />
+                    ) : (
+                      <ArrowDownRight className="text-red-500" size={18} />
+                    )}
+                    <span className={`text-lg font-bold
+          ${yearlyInsight.incomeDiff >= 0 ? "text-green-600" : "text-red-500"}
+        `}>
+                      {Math.abs(yearlyInsight.incomeDiff).toLocaleString()} ฿
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expense Insight */}
+                <div className={`p-4 rounded-2xl border shadow-sm transition-all hover:shadow-md hover:-translate-y-1
+  ${yearlyInsight.expenseDiff > 0
+                    ? "bg-red-50 border-red-100"
+                    : "bg-orange-50 border-orange-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-600">รายจ่าย</span>
+                    <div className="text-xs text-gray-400">เทียบกับปีก่อน</div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold
+          ${yearlyInsight.expenseDiff <= 0
+                        ? "bg-red-100 text-green-700" //ลดลง
+                        : "bg-orange-100 text-red-700" //เพิ่มขึ้น
+                      }`}
+                    >
+                      {yearlyInsight.expenseDiff >= 0 ? "เพิ่มขึ้น" : "ลดลง"}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    {yearlyInsight.expenseDiff >= 0 ? (
+                      <ArrowUpRight className="text-red-700" size={18} /> //ใช้จ่ายเยอะ
+                    ) : (
+                      <ArrowDownRight className="text-green-700" size={18} /> //ใช้จ่ายน้อย
+                    )}
+                    <span className={`text-lg font-bold
+          ${yearlyInsight.expenseDiff <= 0 ? "text-green-600" : "text-red-600"}
+        `}>
+                      {Math.abs(yearlyInsight.expenseDiff).toLocaleString()} ฿
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
             {/* --- Monthly Summary Table --- */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border">
+            <div className="mt-8 bg-white rounded-[2rem] p-6 shadow-sm border">
               <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
                 <CalendarClock className="text-purple-500" size={20} /> สรุปข้อมูลรายเดือน
               </h2>
@@ -356,33 +582,43 @@ const ReportPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {[...Array(12).keys()].map((monthIndex) => {
-                      const income = monthlyData.incomeByMonth[monthIndex];
-                      const expense = monthlyData.expenseByMonth[monthIndex];
-                      // 🚩 สมมติให้ผ่อนชำระเป็นค่าคงที่ต่อเดือนไปก่อน
-                      const installment = totalMonthlyInstallment;
-                      const net = income - expense - installment;
+                    {(() => {
+                      // 1. กำหนดเงินต้นปีเป็นตัวตั้งต้น
+                      let runningBalance = yearSummary?.openingBalance || 0;
 
-                      return (
-                        <tr key={monthIndex} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-4 font-bold text-gray-700">
-                            {new Date(currentYear, monthIndex).toLocaleString('th-TH', { month: 'long' })}
-                          </td>
-                          <td className="py-4 text-right text-green-600 font-medium">
-                            {income > 0 ? `+${income.toLocaleString()}` : "-"}
-                          </td>
-                          <td className="py-4 text-right text-red-500 font-medium">
-                            {expense > 0 ? `-${expense.toLocaleString()}` : "-"}
-                          </td>
-                          <td className="py-4 text-right text-amber-600 font-medium">
-                            {installment > 0 ? `-${installment.toLocaleString()}` : "-"}
-                          </td>
-                          <td className={`py-4 text-right font-black ${net >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
-                            {net.toLocaleString()} ฿
-                          </td>
-                        </tr>
-                      );
-                    })}
+                      return [...Array(12).keys()].map((monthIndex) => {
+                        const income = monthlyData.incomeByMonth[monthIndex] || 0;
+                        const expense = monthlyData.expenseByMonth[monthIndex] || 0;
+                        const installment = totalMonthlyInstallment || 0;
+
+                        // 2. คำนวณยอดสุทธิของเดือนนั้นๆ
+                        const monthlyNet = income - expense - installment;
+
+                        // 3. อัปเดตยอดสะสม
+                        runningBalance += monthlyNet;
+
+                        return (
+                          <tr key={monthIndex} className="hover:bg-gray-50 transition-colors">
+                            <td className="py-4 font-bold text-gray-700">
+                              {new Date(currentYear, monthIndex).toLocaleString('th-TH', { month: 'long' })}
+                            </td>
+                            <td className="py-4 text-right text-green-600 font-medium">
+                              {income > 0 ? `+${income.toLocaleString()}` : "-"}
+                            </td>
+                            <td className="py-4 text-right text-red-500 font-medium">
+                              {expense > 0 ? `-${expense.toLocaleString()}` : "-"}
+                            </td>
+                            <td className="py-4 text-right text-amber-600 font-medium">
+                              {installment > 0 ? `-${installment.toLocaleString()}` : "-"}
+                            </td>
+                            {/* ตรงนี้คือยอดเงินสะสมรวมถึงเดือนปัจจุบัน */}
+                            <td className={`py-4 text-right font-black ${runningBalance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
+                              {runningBalance.toLocaleString()} ฿
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -468,7 +704,6 @@ const ReportPage = () => {
 
           </div>
         </div>
-
       </div>
     </div>
   );
