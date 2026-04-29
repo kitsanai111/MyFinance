@@ -41,10 +41,10 @@ const ReportPage = () => {
   const [yearSummary, setYearSummary] = useState(null);
   const openingBalance = yearSummary?.openingBalance || 0;
 
-
-
   const [startYear, setStartYear] = useState(currentYear - 1);
   const [endYear, setEndYear] = useState(currentYear);
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (!token) {
@@ -165,21 +165,6 @@ const ReportPage = () => {
     .map(Number)
     .sort((a, b) => a - b);
 
-  const yearlyChartData = {
-    labels: sortedYears,
-    datasets: [
-      {
-        label: "รายรับ",
-        data: sortedYears.map(year => yearlyData[year].income),
-        backgroundColor: "#10B981",
-      },
-      {
-        label: "รายจ่าย",
-        data: sortedYears.map(year => yearlyData[year].expense),
-        backgroundColor: "#EF4444",
-      }
-    ]
-  };
 
   const yearlyInsight = useMemo(() => {
     const years = Object.keys(yearlyData)
@@ -316,6 +301,85 @@ const ReportPage = () => {
 
     return baseOptions;
   };
+
+  // เพิ่มฟังก์ชันนี้เพื่อคำนวณภาระผ่อนรายเดือนแบบ Dynamic
+  const getMonthlyInstallment = (year, monthIndex) => {
+    return installments.reduce((sum, item) => {
+      const startDate = new Date(item.startDate);
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
+
+      // คำนวณลำดับเดือนที่ผ่านไปนับจากวันที่เริ่มผ่อน
+      const monthDiff = (year - startYear) * 12 + (monthIndex - startMonth);
+
+      // ถ้า monthDiff อยู่ระหว่าง 0 ถึง totalTerms - 1 แปลว่าต้องจ่ายงวดนี้
+      if (monthDiff >= 0 && monthDiff < item.totalTerms) {
+        return sum + Number(item.monthlyAmount || 0);
+      }
+      return sum;
+    }, 0);
+  };
+
+  const availableYears = useMemo(() => {
+    const years = new Set();
+
+    // 1. เพิ่มปีปัจจุบันไว้ก่อนเสมอ
+    years.add(new Date().getFullYear());
+
+    // 2. ดึงปีจากรายการผ่อนชำระ
+    installments.forEach(item => {
+      if (item.startDate) years.add(new Date(item.startDate).getFullYear());
+    });
+
+    // 3. ดึงปีจากรายการรายรับ
+    incomes.forEach(item => {
+      if (item.date) years.add(new Date(item.date).getFullYear());
+    });
+
+    // 4. ดึงปีจากรายการรายจ่าย
+    expenses.forEach(item => {
+      if (item.date) years.add(new Date(item.date).getFullYear());
+    });
+
+    // เรียงลำดับจากน้อยไปมาก
+    return Array.from(years).sort((a, b) => a - b);
+  }, [installments, incomes, expenses]);
+
+
+
+  const getOpeningBalance = (year) => {
+    let balance = 0;
+
+    incomes.forEach(item => {
+      const d = new Date(item.date);
+      if (d.getFullYear() < year) {
+        balance += Number(item.amount || 0);
+      }
+    });
+
+    expenses.forEach(item => {
+      const d = new Date(item.date);
+      if (d.getFullYear() < year) {
+        balance -= Number(item.amount || 0);
+      }
+    });
+
+    installments.forEach(item => {
+      const startDate = new Date(item.startDate);
+
+      for (let i = 0; i < item.totalTerms; i++) {
+        const payDate = new Date(startDate);
+        payDate.setMonth(startDate.getMonth() + i);
+
+        if (payDate.getFullYear() < year) {
+          balance -= Number(item.monthlyAmount || 0);
+        }
+      }
+    });
+
+    return balance;
+  };
+
 
   const renderChart = () => {
     const data = getChartData();
@@ -568,6 +632,16 @@ const ReportPage = () => {
             <div className="mt-8 bg-white rounded-[2rem] p-6 shadow-sm border">
               <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
                 <CalendarClock className="text-purple-500" size={20} /> สรุปข้อมูลรายเดือน
+
+                <select
+                  className="bg-gray-50 p-3 rounded-xl font-bold border"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                >
+                  {availableYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
               </h2>
 
               <div className="overflow-x-auto">
@@ -584,29 +658,31 @@ const ReportPage = () => {
                   <tbody className="divide-y divide-gray-50">
                     {(() => {
                       // 1. กำหนดเงินต้นปีเป็นตัวตั้งต้น
-                      let runningBalance = yearSummary?.openingBalance || 0;
+                      let runningBalance = getOpeningBalance(selectedYear);
+
+                      const { income, expense } = getMonthlyByYear(selectedYear);
 
                       return [...Array(12).keys()].map((monthIndex) => {
-                        const income = monthlyData.incomeByMonth[monthIndex] || 0;
-                        const expense = monthlyData.expenseByMonth[monthIndex] || 0;
-                        const installment = totalMonthlyInstallment || 0;
 
-                        // 2. คำนวณยอดสุทธิของเดือนนั้นๆ
-                        const monthlyNet = income - expense - installment;
+                        const monthlyIncome = income[monthIndex] || 0;
+                        const monthlyExpense = expense[monthIndex] || 0;
+                        const installment = getMonthlyInstallment(selectedYear, monthIndex);
 
-                        // 3. อัปเดตยอดสะสม
+                        const monthlyNet = monthlyIncome - monthlyExpense - installment;
                         runningBalance += monthlyNet;
+
+                        // console.log(selectedYear, income, expense);
 
                         return (
                           <tr key={monthIndex} className="hover:bg-gray-50 transition-colors">
                             <td className="py-4 font-bold text-gray-700">
-                              {new Date(currentYear, monthIndex).toLocaleString('th-TH', { month: 'long' })}
+                              {new Date(selectedYear, monthIndex).toLocaleString('th-TH', { month: 'long' })}
                             </td>
                             <td className="py-4 text-right text-green-600 font-medium">
-                              {income > 0 ? `+${income.toLocaleString()}` : "-"}
+                              {monthlyIncome > 0 ? `+${monthlyIncome.toLocaleString()}` : "-"}
                             </td>
                             <td className="py-4 text-right text-red-500 font-medium">
-                              {expense > 0 ? `-${expense.toLocaleString()}` : "-"}
+                              {monthlyExpense > 0 ? `-${monthlyExpense.toLocaleString()}` : "-"}
                             </td>
                             <td className="py-4 text-right text-amber-600 font-medium">
                               {installment > 0 ? `-${installment.toLocaleString()}` : "-"}
