@@ -9,7 +9,7 @@ import api from '../../utils/api';
 import useEcomStore from '../../store/ecom-store';
 
 const InstallmentModal = ({ isOpen, onClose, onSave, initialData, salary, currentTotalMonthly }) => {
-  const [formData, setFormData] = useState({ name: '', totalPrice: '', totalTerms: '' });
+  const [formData, setFormData] = useState({ name: '', totalPrice: '', totalTerms: '', startDate: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     if (initialData) {
@@ -65,6 +65,15 @@ const InstallmentModal = ({ isOpen, onClose, onSave, initialData, salary, curren
               <input type="number" placeholder="30000"
                 className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-amber-400 outline-none transition-all font-bold text-gray-700"
                 value={formData.totalPrice} onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">วันเริ่มจ่ายงวดแรก</label>
+              <input type="date"
+                className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold text-gray-700"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               />
             </div>
             <div>
@@ -222,118 +231,118 @@ export default function InstallmentUser() {
         </div>
 
 
-      {salary > 0 ? (
-        <div className={`p-5 rounded-3xl flex items-start gap-4 border shadow-sm ${dsrPercentage > 40 ? 'bg-red-50 border-red-200' :
+        {salary > 0 ? (
+          <div className={`p-5 rounded-3xl flex items-start gap-4 border shadow-sm ${dsrPercentage > 40 ? 'bg-red-50 border-red-200' :
             dsrPercentage > 30 ? 'bg-yellow-50 border-yellow-200' : 'bg-emerald-50 border-emerald-200'
-          }`}>
-          <div className={`p-3 rounded-2xl ${dsrPercentage > 40 ? 'bg-red-100 text-red-600' : dsrPercentage > 30 ? 'bg-yellow-100 text-yellow-600' : 'bg-emerald-100 text-emerald-600'}`}>
-            {dsrPercentage > 40 ? <TrendingDown size={28} /> : <AlertCircle size={28} />}
+            }`}>
+            <div className={`p-3 rounded-2xl ${dsrPercentage > 40 ? 'bg-red-100 text-red-600' : dsrPercentage > 30 ? 'bg-yellow-100 text-yellow-600' : 'bg-emerald-100 text-emerald-600'}`}>
+              {dsrPercentage > 40 ? <TrendingDown size={28} /> : <AlertCircle size={28} />}
+            </div>
+            <div>
+              <h3 className={`font-bold text-lg ${dsrPercentage > 40 ? 'text-red-800' : dsrPercentage > 30 ? 'text-yellow-800' : 'text-emerald-800'}`}>
+                วิเคราะห์ภาระหนี้สิน (DSR)
+              </h3>
+              <p className={`text-sm mt-1 leading-relaxed ${dsrPercentage > 40 ? 'text-red-600' : dsrPercentage > 30 ? 'text-yellow-700' : 'text-emerald-700'}`}>
+                ยอดผ่อนชำระรวมคิดเป็น <strong>{dsrPercentage}%</strong> ของเงินเดือน ({salary.toLocaleString()} บาท) <br />
+                {dsrPercentage > 40 ? "⚠️ ภาระหนี้สูงมาก! เกินเกณฑ์มาตรฐานที่ 40% คุณควรงดสร้างหนี้เพิ่มเด็ดขาด" :
+                  dsrPercentage > 30 ? "⚠️ เริ่มตึงมือ! ภาระหนี้ใกล้แตะ 40% ควรระมัดระวังการใช้จ่าย" :
+                    "✅ สถานะการเงินปลอดภัย! ภาระหนี้อยู่ในเกณฑ์มาตรฐาน (ไม่เกิน 30-40%)"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className={`font-bold text-lg ${dsrPercentage > 40 ? 'text-red-800' : dsrPercentage > 30 ? 'text-yellow-800' : 'text-emerald-800'}`}>
-              วิเคราะห์ภาระหนี้สิน (DSR)
-            </h3>
-            <p className={`text-sm mt-1 leading-relaxed ${dsrPercentage > 40 ? 'text-red-600' : dsrPercentage > 30 ? 'text-yellow-700' : 'text-emerald-700'}`}>
-              ยอดผ่อนชำระรวมคิดเป็น <strong>{dsrPercentage}%</strong> ของเงินเดือน ({salary.toLocaleString()} บาท) <br />
-              {dsrPercentage > 40 ? "⚠️ ภาระหนี้สูงมาก! เกินเกณฑ์มาตรฐานที่ 40% คุณควรงดสร้างหนี้เพิ่มเด็ดขาด" :
-                dsrPercentage > 30 ? "⚠️ เริ่มตึงมือ! ภาระหนี้ใกล้แตะ 40% ควรระมัดระวังการใช้จ่าย" :
-                  "✅ สถานะการเงินปลอดภัย! ภาระหนี้อยู่ในเกณฑ์มาตรฐาน (ไม่เกิน 30-40%)"}
-            </p>
+        ) : (
+          <div className="p-4 bg-gray-100 text-gray-500 text-sm rounded-2xl border border-gray-200 flex gap-2 items-center">
+            <AlertCircle size={18} /> คุณยังไม่ได้ระบุเงินเดือนในหน้า "เป้าหมาย" ระบบจึงไม่สามารถประเมินภาระหนี้ได้
           </div>
-        </div>
-      ) : (
-        <div className="p-4 bg-gray-100 text-gray-500 text-sm rounded-2xl border border-gray-200 flex gap-2 items-center">
-          <AlertCircle size={18} /> คุณยังไม่ได้ระบุเงินเดือนในหน้า "เป้าหมาย" ระบบจึงไม่สามารถประเมินภาระหนี้ได้
-        </div>
-      )}
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <button
-          onClick={() => { setEditData(null); setIsModalOpen(true); }}
-          className="flex flex-col items-center justify-center p-8 rounded-[2.5rem] border-2 border-dashed border-gray-200 text-gray-400 hover:border-amber-400 hover:text-amber-500 hover:bg-amber-50 transition-all min-h-[260px] gap-4 group bg-white/50"
-        >
-          <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-300">
-            <Plus size={32} className="text-gray-300 group-hover:text-amber-600" />
-          </div>
-          <div className="text-center">
-            <span className="font-black text-lg block">เพิ่มรายการผ่อน</span>
-            <span className="text-xs font-medium opacity-60">เช่น บัตรเครดิต, ค่าบ้าน, ค่ารถ</span>
-          </div>
-        </button>
+          <button
+            onClick={() => { setEditData(null); setIsModalOpen(true); }}
+            className="flex flex-col items-center justify-center p-8 rounded-[2.5rem] border-2 border-dashed border-gray-200 text-gray-400 hover:border-amber-400 hover:text-amber-500 hover:bg-amber-50 transition-all min-h-[260px] gap-4 group bg-white/50"
+          >
+            <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-300">
+              <Plus size={32} className="text-gray-300 group-hover:text-amber-600" />
+            </div>
+            <div className="text-center">
+              <span className="font-black text-lg block">เพิ่มรายการผ่อน</span>
+              <span className="text-xs font-medium opacity-60">เช่น บัตรเครดิต, ค่าบ้าน, ค่ารถ</span>
+            </div>
+          </button>
 
-        {installments.map((item) => {
-          const current = item.currentTerm || 0;
-          const progress = (current / item.totalTerms) * 100;
-          const isFullyPaid = current >= item.totalTerms;
+          {installments.map((item) => {
+            const current = item.currentTerm || 0;
+            const progress = (current / item.totalTerms) * 100;
+            const isFullyPaid = current >= item.totalTerms;
 
-          return (
-            <div key={item.id} className={`p-8 rounded-[2.5rem] border transition-all relative overflow-hidden flex flex-col justify-between min-h-[260px] ${isFullyPaid ? 'bg-gray-50/80 border-gray-200 opacity-80' : 'bg-white border-gray-100 shadow-sm hover:shadow-xl hover:border-amber-100'}`}>
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="text-xl font-black text-gray-800 tracking-tight flex items-center gap-2">
-                      {item.name}
-                      {isFullyPaid && <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full uppercase tracking-wider">ผ่อนจบแล้ว</span>}
-                    </h3>
-                    <div className="text-xs text-gray-400 mt-2 font-bold bg-gray-50 px-2 py-1 rounded-md inline-block border border-gray-100">
-                      ยอดเต็ม {Number(item.totalPrice).toLocaleString()} ฿
+            return (
+              <div key={item.id} className={`p-8 rounded-[2.5rem] border transition-all relative overflow-hidden flex flex-col justify-between min-h-[260px] ${isFullyPaid ? 'bg-gray-50/80 border-gray-200 opacity-80' : 'bg-white border-gray-100 shadow-sm hover:shadow-xl hover:border-amber-100'}`}>
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="text-xl font-black text-gray-800 tracking-tight flex items-center gap-2">
+                        {item.name}
+                        {isFullyPaid && <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full uppercase tracking-wider">ผ่อนจบแล้ว</span>}
+                      </h3>
+                      <div className="text-xs text-gray-400 mt-2 font-bold bg-gray-50 px-2 py-1 rounded-md inline-block border border-gray-100">
+                        ยอดเต็ม {Number(item.totalPrice).toLocaleString()} ฿
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-gray-900">{Number(item.monthlyAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">฿ / เดือน</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-gray-900">{Number(item.monthlyAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">฿ / เดือน</div>
-                  </div>
-                </div>
 
-                <div className="mb-8">
-                  <div className="flex justify-between text-[11px] font-black text-gray-400 mb-3 uppercase tracking-widest">
-                    <span>งวดที่ {current} จาก {item.totalTerms}</span>
-                    <span className={isFullyPaid ? 'text-emerald-500' : 'text-amber-600'}>
-                      {isFullyPaid ? 'สำเร็จ!' : `เหลืออีก ${item.totalTerms - current} เดือน`}
-                    </span>
+                  <div className="mb-8">
+                    <div className="flex justify-between text-[11px] font-black text-gray-400 mb-3 uppercase tracking-widest">
+                      <span>งวดที่ {current} จาก {item.totalTerms}</span>
+                      <span className={isFullyPaid ? 'text-emerald-500' : 'text-amber-600'}>
+                        {isFullyPaid ? 'สำเร็จ!' : `เหลืออีก ${item.totalTerms - current} เดือน`}
+                      </span>
+                    </div>
+                    <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-50 p-0.5">
+                      <div
+                        style={{ width: `${progress}%` }}
+                        className={`h-full rounded-full transition-all duration-1000 ease-out ${isFullyPaid ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-50 p-0.5">
-                    <div
-                      style={{ width: `${progress}%` }}
-                      className={`h-full rounded-full transition-all duration-1000 ease-out ${isFullyPaid ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
-                    ></div>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                  <div className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-                    เริ่ม: {new Date(item.startDate).toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })}
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => setEditData(item) || setIsModalOpen(true)} className="p-3 text-gray-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-all"><Pencil size={18} /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                    <div className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                      เริ่ม: {new Date(item.startDate).toLocaleDateString('th-TH', { month: 'short', year: '2-digit' })}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => setEditData(item) || setIsModalOpen(true)} className="p-3 text-gray-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-all"><Pencil size={18} /></button>
+                      <button onClick={() => handleDelete(item.id)} className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"><Trash2 size={18} /></button>
 
-                    {!isFullyPaid && (
-                      <button
-                        onClick={() => togglePaid(item)}
-                        className="ml-2 flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-black transition-all shadow-lg transform active:scale-95"
-                      >
-                        จ่ายงวดนี้
-                      </button>
-                    )}
+                      {!isFullyPaid && (
+                        <button
+                          onClick={() => togglePaid(item)}
+                          className="ml-2 flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-black transition-all shadow-lg transform active:scale-95"
+                        >
+                          จ่ายงวดนี้
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      <InstallmentModal
-        isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setEditData(null); }}
-        onSave={handleSave}
-        initialData={editData}
-        salary={salary}
-        currentTotalMonthly={totalToPay}
-      />
+        <InstallmentModal
+          isOpen={isModalOpen}
+          onClose={() => { setIsModalOpen(false); setEditData(null); }}
+          onSave={handleSave}
+          initialData={editData}
+          salary={salary}
+          currentTotalMonthly={totalToPay}
+        />
+      </div>
     </div>
-          </div>
   );
 }
