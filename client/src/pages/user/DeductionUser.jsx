@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User, Shield, Briefcase, Save, Edit2, AlertCircle, CheckSquare, Square, Info, CheckCircle } from 'lucide-react';
+import { User, Shield, Briefcase, Save, Edit2, AlertCircle, CheckSquare, Square, Info, CheckCircle, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useEcomStore from '../../store/ecom-store';
 import api from '../../utils/api';
+import Swal from 'sweetalert2';
 
 const DeductionUser = () => {
+    const navigate = useNavigate();
     const user = useEcomStore((state) => state.user);
     const token = useEcomStore((state) => state.token);
 
@@ -14,11 +17,16 @@ const DeductionUser = () => {
     const [deductions, setDeductions] = useState({});
     const [enabledDeductions, setEnabledDeductions] = useState({ personal: true });
     const [masterFunds, setMasterFunds] = useState([]);
+    const [formCompleted, setFormCompleted] = useState(false);
 
     // ✅ 1. โหลดข้อมูลและจัดการหน่วย (คน/บาท)
     const fetchDeductions = async () => {
         try {
             const res = await api.get('/deduction');
+            if (!res.data?.profile) {
+                setFormCompleted(false);
+                return;
+            } setFormCompleted(true);
             if (res.data && res.data.investments) {
                 const serverInvestments = res.data.investments;
                 setMasterFunds(serverInvestments);
@@ -43,8 +51,9 @@ const DeductionUser = () => {
 
     // ✅ 2. Logic คำนวณยอดรวม (คำนวณเงินจริงจากจำนวนคน)
     const totals = useMemo(() => {
-        let rawTotal = 0;
+        let normalTotal = 0;
         let retirementSum = 0;
+        let insuranceSum = 0;
 
         masterFunds.forEach(f => {
             const code = f.fundType.code;
@@ -52,25 +61,39 @@ const DeductionUser = () => {
                 let amount = 0;
 
                 if (f.fundType.isCount) {
-                    // จำนวนคน * เงินสิทธิ์ต่อคน
+
                     amount = Number(deductions[code] || 0) * Number(f.fundType.taxLimit);
                 } else {
-                    amount = f.fundType.isFixed ? Number(f.fundType.taxLimit) : Number(deductions[code] || 0);
+                    amount = f.fundType.isFixed
+                        ? Number(f.fundType.taxLimit)
+                        : Number(deductions[code] || 0);
                 }
 
-                rawTotal += amount;
-                if (f.fundType.category === 'investment' || code.includes('PENSION')) {
+                if (f.fundType.isRetirement) {
                     retirementSum += amount;
+
+                } else if (f.fundType.insuranceGroup === 'INSURANCE_100K') {
+                    insuranceSum += amount;
+
+                } else {
+                    normalTotal += amount;
                 }
             }
         });
 
-        const overLimit = retirementSum > 500000 ? retirementSum - 500000 : 0;
+        const cappedRetirement = Math.min(retirementSum, 500000);
+        const cappedInsurance = Math.min(insuranceSum, 100000);
         return {
-            total: rawTotal - overLimit,
-            isRetirementOver: retirementSum > 500000
+            total: normalTotal + cappedRetirement + cappedInsurance,
+            retirementSum,
+            insuranceSum,
+            isRetirementOver: retirementSum > 500000,
+            isInsuranceOver: insuranceSum > 100000
         };
+
     }, [deductions, enabledDeductions, masterFunds]);
+
+    const overAmount = totals.retirementSum - 500000;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -94,12 +117,10 @@ const DeductionUser = () => {
                 investments: masterFunds.map(f => {
                     const code = f.fundType.code;
                     // 💡 ส่งค่าที่ User พิมพ์ในช่อง Input ไปเลย ไม่ต้องคูณอะไรทั้งสิ้น!
-                    const currentInputValue = Number(deductions[code] || 0);
+                    const inputVal = Number(deductions[code] || 0);
 
-                    return {
-                        fundTypeId: f.fundType.id,
-                        amount: currentInputValue // ส่งเลข 2 หรือเลขเงินประกันจริงๆ ไป
-                    };
+                    const sendValue = (f.fundType.isFixed && !f.fundType.isCount) ? 1 : inputVal;
+                    return { fundTypeId: f.fundType.id, amount: sendValue };
                 }).filter(item => enabledDeductions[masterFunds.find(mf => mf.fundType.id === item.fundTypeId).fundType.code])
             };
 
@@ -176,6 +197,53 @@ const DeductionUser = () => {
                 );
             });
     };
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-500 font-sans">
+                <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <span className="animate-pulse font-medium">กำลังประมวลผลข้อมูลค่าลดหย่อน...</span>
+            </div>
+        );
+    }
+    // วางไว้หลัง loading check / masterFunds check
+    if (!formCompleted) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl border border-slate-100">
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <AlertCircle size={40} className="text-yellow-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-3">ยังไม่ได้ตอบแบบสอบถาม</h2>
+                    <p className="text-slate-500 mb-8 text-sm">กรุณาตอบแบบสอบถามก่อนเพื่อเริ่มใช้งาน</p>
+                    <button
+                        onClick={() => navigate('/user/tax')}
+                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-100"
+                    >
+                        <User size={20} /> ไปตอบแบบสอบถาม <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    }
+    if (masterFunds.length === 0 && !loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl border border-slate-100">
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <AlertCircle size={40} className="text-yellow-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-3">ไม่พบข้อมูลลดหย่อน</h2>
+                    <p className="text-slate-500 mb-8 text-sm">กรุณาตั้งค่าข้อมูลลดหย่อนส่วนตัวก่อนเพื่อเริ่มคำนวณภาษี</p>
+                    <button
+                        onClick={() => navigate('/user/formdetail')}
+                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-100"
+                    >
+                        <User size={20} /> ไปตั้งค่าโปรไฟล์ภาษี <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
@@ -184,7 +252,25 @@ const DeductionUser = () => {
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                         ข้อมูลค่าลดหย่อน
                     </h1>
-                    <button onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                    <button onClick={() => {
+                        if (isEditing) {
+                            Swal.fire({
+                                title: 'บันทึกข้อมูล?',
+                                text: 'ยืนยันการบันทึกข้อมูลค่าลดหย่อน',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#F59E0B',
+                                cancelButtonColor: '#9CA3AF',
+                                confirmButtonText: 'บันทึก',
+                                cancelButtonText: 'ยกเลิก',
+                                reverseButtons: true,
+                            }).then((result) => {
+                                if (result.isConfirmed) handleSave();
+                            });
+                        } else {
+                            setIsEditing(true);
+                        }
+                    }}
                         className={`px-8 py-3 rounded-2xl font-bold transition-all shadow-md ${isEditing ? 'bg-emerald-500 text-white' : 'bg-white'}`}>
                         {isEditing ? 'บันทึกข้อมูล' : 'แก้ไขข้อมูล'}
                     </button>
@@ -198,7 +284,18 @@ const DeductionUser = () => {
                         </div>
                         {totals.isRetirementOver && (
                             <div className="bg-red-50 border border-red-100 p-4 rounded-2xl text-red-700 flex gap-2">
-                                <AlertCircle size={20} /> <span className="text-xs font-bold uppercase tracking-tighter">เงินออมเกษียณเกิน 5 แสน!</span>
+                                <AlertCircle size={20} />
+                                <span className="text-xs font-bold">
+                                    เกิน {overAmount.toLocaleString()} บาท (ใช้ได้สูงสุด 500,000)
+                                </span>
+                            </div>
+                        )}
+                        {totals.isInsuranceOver && (
+                            <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl text-orange-700 flex gap-2">
+                                <AlertCircle size={20} />
+                                <span className="text-xs font-bold">
+                                    ประกันเกิน {(totals.insuranceSum - 100000).toLocaleString()} บาท (ใช้ได้สูงสุด 100,000)
+                                </span>
                             </div>
                         )}
                     </div>

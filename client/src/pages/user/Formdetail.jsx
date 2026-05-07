@@ -25,6 +25,9 @@ const Formdetail = () => {
         hasFixedIncome: 'yes',          // 4. รายได้ประจำ
         parentsCare: 'none',            // 5. เลี้ยงดูบิดามารดา (บิดา/มารดา/ทั้งคู่)
         isDisabledCare: 'no',           // 6. ดูแลผู้พิการ
+
+
+        
         socialSecurityType: 'm33',      // 7. ประกันสังคม มาตรา
         ssAmount: 750,                  // 7.1 จำนวนเงินประกันสังคม
         lifeInsurance: '',              // 8. เบี้ยประกันชีวิต/สะสมทรัพย์

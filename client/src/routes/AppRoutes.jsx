@@ -17,9 +17,10 @@ import DeductionUser from '../pages/user/DeductionUser'
 import DashboardSuperAdmin from '../pages/superadmin/DashboardSuperAdmin'
 import AdminCategory from '../pages/admin/AdminCategory'
 import AdminInvestment from '../pages/admin/AdminDeduction'
-import Formdetail from '../pages/user/formdetail'
+import Formdetail from '../pages/user/Formdetail'
 import AdminActivityLog from '../pages/admin/AdminActivityLog'
 import ChangePassword from '../pages/auth/ChangePassword'
+import MyProfile from '../pages/auth/MyProfile'
 
 // ProtectRoute
 import ProtectRoute from '../routes/ProtectRoute'
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
             { path: 'tax', element: <TaxPage /> },
             { path: 'deductionuser', element: <DeductionUser /> },
             { path: 'formdetail', element: <Formdetail /> },
+            { path: 'myprofile', element: <MyProfile /> },
 
         ]
     },
@@ -66,6 +68,7 @@ const router = createBrowserRouter([
             { path: 'adminactivityLog', element: < AdminActivityLog /> },
             { path: 'admincategory', element: < AdminCategory /> },
             { path: 'Admininvestment', element: < AdminInvestment /> },
+            { path: 'myprofile', element: <MyProfile /> },
         ]
     },
     {
@@ -80,6 +83,7 @@ const router = createBrowserRouter([
             { path: 'adminactivityLog', element: < AdminActivityLog /> },
             { path: 'admincategory', element: < AdminCategory /> },
             { path: 'Admininvestment', element: < AdminInvestment /> },
+            { path: 'myprofile', element: <MyProfile /> },
         ]
     }
 ])

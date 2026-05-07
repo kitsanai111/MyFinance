@@ -39,6 +39,10 @@ const TaxPage = () => {
                 }
             } catch (err) {
                 console.error("Error fetching tax summary:", err);
+
+                if (err.response?.status === 401) {
+                    navigate('/login');
+                }
                 setTaxData(prev => ({ ...prev, profile: null }));
             } finally {
                 setLoading(false);
@@ -64,8 +68,8 @@ const TaxPage = () => {
                     <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <AlertCircle size={40} className="text-yellow-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-3">ไม่พบข้อมูลลดหย่อน</h2>
-                    <p className="text-slate-500 mb-8 text-sm">กรุณาตั้งค่าข้อมูลลดหย่อนส่วนตัวก่อนเพื่อเริ่มคำนวณภาษี</p>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-3">ไม่พบข้อมูลภาษี</h2>
+                    <p className="text-slate-500 mb-8 text-sm">กรุณาตอบแบบสอบถามก่อนดำเนินการ</p>
                     <button
                         onClick={() => navigate('/user/formdetail')}
                         className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-yellow-100"

@@ -122,7 +122,7 @@ const UserNav = () => {
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                       <div className="p-2">
-                        <NavLink to="/user/profileuser" onClick={closeDropdown} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-colors font-medium">
+                        <NavLink to="/user/myprofile" onClick={closeDropdown} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-colors font-medium">
                           <User size={18} /> ข้อมูลส่วนตัว
                         </NavLink>
                         <div className="my-1 border-t border-gray-50"></div>

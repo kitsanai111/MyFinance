@@ -18,8 +18,10 @@ export default function FinanceDashboard() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [mode, setMode] = useState("day");
 
+
   // State สำหรับ Modal และ Form
   const [showModal, setShowModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null); // { date, entries }
   const [formData, setFormData] = useState({
     type: "expense",
     amount: "",
@@ -492,7 +494,7 @@ export default function FinanceDashboard() {
                   <div className="p-2.5 bg-yellow-100 text-yellow-700 rounded-2xl">
                     <Wallet className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-gray-700">กระเป๋าเงินสุทธิ</span>
+                  <span className="font-bold text-gray-700">กระเป๋าเงิน</span>
                 </div>
               </div>
 
@@ -500,7 +502,8 @@ export default function FinanceDashboard() {
                 <div className={`text-4xl font-extrabold tracking-tight ${allTimeBalance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
                   {allTimeBalance.toLocaleString()} <span className="text-lg font-medium text-gray-400">฿</span>
                 </div>
-                <div className="text-xs text-gray-400 mt-1 font-medium bg-gray-50 inline-block px-3 py-1 rounded-full">ยอดรวมทั้งหมด (All Time)</div>
+                <div className="text-xs text-gray-400 mt-1 font-medium bg-gray-50 inline-block px-3 py-1 rounded-full">ยอดรวมคงเหลือทั้งหมด (All Time)</div>
+
               </div>
 
               {/* Toggles */}
@@ -676,11 +679,24 @@ export default function FinanceDashboard() {
                   const isToday = new Date().toDateString() === cell.toDateString();
 
                   return (
-                    <div key={idx} className={`h-24 border ${isToday ? 'border-yellow-400 bg-yellow-50/30' : 'border-gray-100'} rounded-2xl p-2 relative flex flex-col hover:border-yellow-300 hover:shadow-md transition-all group overflow-hidden`}>
-                      <div className={`text-xs font-bold mb-1 ${isToday ? 'text-yellow-700' : 'text-gray-400 group-hover:text-gray-600'}`}>{cell.getDate()}</div>
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        if (dayEntries.length > 0) {
+                          setSelectedDay({ dateKey, cell, entries: dayEntries });
+                        }
+                      }}
+                      className={`h-24 border ${isToday ? 'border-yellow-400 bg-yellow-50/30' : 'border-gray-100'} 
+    rounded-2xl p-2 relative flex flex-col transition-all group overflow-hidden
+    ${dayEntries.length > 0 ? 'hover:border-yellow-300 hover:shadow-md cursor-pointer' : ''}
+    ${selectedDay?.dateKey === dateKey ? 'ring-2 ring-yellow-400' : ''}`}
+                    >
+                      <div className={`text-xs font-bold mb-1 ${isToday ? 'text-yellow-700' : 'text-gray-400'}`}>
+                        {cell.getDate()}
+                      </div>
                       <div className="flex-1 flex flex-col gap-1 overflow-hidden">
                         {dayEntries.slice(0, 3).map((de, i) => (
-                          <div key={i} className={`h-1.5 w-full rounded-full ${de.type === 'income' ? 'bg-green-400' : 'bg-red-400'}`} title={`${de.amount} บาท`}></div>
+                          <div key={i} className={`h-1.5 w-full rounded-full ${de.type === 'income' ? 'bg-green-400' : 'bg-red-400'}`} />
                         ))}
                       </div>
                     </div>
@@ -688,6 +704,58 @@ export default function FinanceDashboard() {
                 })}
               </div>
             </div>
+            {selectedDay && (
+              <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4"
+                onClick={() => setSelectedDay(null)}
+              >
+                <div
+                  className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-gray-700">
+                      {new Date(selectedDay.cell).toLocaleDateString('th-TH', {
+                        weekday: 'long', day: 'numeric', month: 'long'
+                      })}
+                    </p>
+                    <button onClick={() => setSelectedDay(null)} className="text-gray-300 hover:text-gray-500 transition-colors text-xl">×</button>
+                  </div>
+
+                  {/* รายการ */}
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {selectedDay.entries.map((e, i) => {
+                      const catName = mappedCategories.find(c => c.id === e.categoryId)?.name;
+                      const label = e.note || e.source || catName || 'รายการ';
+                      return (
+                        <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${e.type === 'income' ? 'bg-green-400' : 'bg-red-400'}`} />
+                            <span className="text-sm text-gray-600">{label}</span>
+                          </div>
+                          <span className={`text-sm font-bold ${e.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                            {e.type === 'income' ? '+' : '-'}{Number(e.amount).toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* สรุปยอด */}
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between text-sm">
+                    {['income', 'expense'].map(t => {
+                      const sum = selectedDay.entries.filter(e => e.type === t).reduce((s, e) => s + Number(e.amount), 0);
+                      if (!sum) return null;
+                      return (
+                        <span key={t} className={`font-bold ${t === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                          {t === 'income' ? 'รับ' : 'จ่าย'} {sum.toLocaleString()} ฿
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -16,6 +16,10 @@ export default function BudgetUser() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  // เพิ่ม 2 บรรทัดนี้
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -26,7 +30,7 @@ export default function BudgetUser() {
     try {
       setLoading(true);
       const [budgetRes, catRes] = await Promise.all([
-        api.get('/budget'),
+        api.get(`/budget?month=${selectedMonth}&year=${selectedYear}`),
         api.get('/category')
       ]);
       setBudgets(budgetRes.data);
@@ -40,7 +44,7 @@ export default function BudgetUser() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   const expenseCategories = useMemo(() => {
     return categories.filter(cat => cat.type === 'expense');
@@ -79,7 +83,7 @@ export default function BudgetUser() {
         popup: 'font-sans rounded-[2.5rem]',
       }
     });
-    
+
     if (result.isConfirmed) {
       try {
         await api.delete(`/budget/${id}`);
@@ -100,7 +104,9 @@ export default function BudgetUser() {
       const payload = {
         name: formData.name,
         categoryId: Number(formData.categoryId),
-        amount: Number(formData.amount)
+        amount: Number(formData.amount),
+        month: selectedMonth, 
+        year: selectedYear
       };
 
       if (isEditMode) {
@@ -129,23 +135,33 @@ export default function BudgetUser() {
     <div className="min-h-screen bg-gray-50/50 p-6 font-sans pb-24">
       {/* จัดการ Layout ให้กึ่งกลางและจำกัดความกว้างเพื่อความสวยงามบน Desktop */}
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* ส่วนหัวของหน้า */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">งบประมาณรายเดือน</h1>
             <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-              <FileText size={14}/>
+              <FileText size={14} />
               จัดการวงเงินแต่ละหมวดหมู่ประจำเดือน {new Date().toLocaleString('th-TH', { month: 'long' })}
             </p>
+
+          </div>
+          <div className="flex gap-4 items-center bg-white p-4 rounded-3xl shadow-sm border border-gray-100 mb-6">
+            <label className="font-black text-gray-700 ml-2">เลือกเดือน:</label>
+            <select className="bg-gray-50 p-3 rounded-xl font-bold border" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
+              {[...Array(12).keys()].map(i => <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('th-TH', { month: 'long' })}</option>)}
+            </select>
+            <select className="bg-gray-50 p-3 rounded-xl font-bold border" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
+              {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
         </div>
 
         {/* ตารางแสดงงบประมาณ */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
+
           {/* การ์ดสำหรับเพิ่มงบประมาณใหม่ */}
-          <button 
+          <button
             onClick={openAddModal}
             className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] border-2 border-dashed border-gray-200 text-gray-400 hover:border-amber-400 hover:text-amber-500 hover:bg-amber-50 transition-all min-h-[240px] gap-4 group bg-white/50 shadow-sm"
           >
@@ -205,8 +221,8 @@ export default function BudgetUser() {
                       <span className="text-gray-300 font-bold text-xs">งบ {limit.toLocaleString()} ฿</span>
                     </div>
                     <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-50 p-0.5">
-                      <div 
-                        style={{ width: `${percent}%` }} 
+                      <div
+                        style={{ width: `${percent}%` }}
                         className={`h-full rounded-full ${progressColor} transition-all duration-1000 ease-out shadow-sm`}
                       ></div>
                     </div>
@@ -242,7 +258,7 @@ export default function BudgetUser() {
             <button onClick={() => setShowModal(false)} className="absolute top-8 right-8 p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
               <X size={20} />
             </button>
-            
+
             <div className="mb-8">
               <h2 className="text-3xl font-black text-gray-900">{isEditMode ? "แก้ไขงบ" : "ตั้งงบใหม่"}</h2>
               <p className="text-sm text-gray-400 font-medium mt-1">ระบุวงเงินเพื่อควบคุมการใช้จ่ายให้เหมาะสม</p>
@@ -297,8 +313,8 @@ export default function BudgetUser() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black shadow-xl shadow-gray-200 hover:bg-black transition-all transform active:scale-95"
                 >
                   {isEditMode ? "อัปเดตข้อมูล" : "เริ่มใช้งานงบนี้"}

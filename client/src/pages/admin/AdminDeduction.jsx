@@ -59,18 +59,28 @@ const AdminDeduction = () => {
             { code: 'HOME_CONSTRUCT', name: 'ค่าสร้างบ้านใหม่ 2567-2568 (ลดหย่อนได้ 10,000 บาท ต่อจำนวนค่าก่อสร้างที่จ่ายจริงทุก 1 ล้านบาท (รวม VAT แล้ว) รวมแล้วไม่เกิน 100,000 บาท)', limit: 100000, isCount: false },
         ]
     };
-    // ✅ เพิ่ม hasDividend เข้าไปใน State ฟอร์ม
+    // hasDividend เข้าไปใน State ฟอร์ม
     const [form, setForm] = useState({
         code: "", name: "", taxLimit: "", category: "investment",
         isFixed: false, isCount: false, expectedReturn: "",
-        incomeLimitRate: "", hasDividend: false
+        incomeLimitRate: "", hasDividend: false,
+        group: "",
+        groupLimit: "",
+
+        isRetirement: false,
+        insuranceGroup: ""
     });
 
     const [editId, setEditId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: "", taxLimit: "", category: "investment",
         isFixed: false, isCount: false, expectedReturn: "",
-        incomeLimitRate: "", hasDividend: false
+        incomeLimitRate: "", hasDividend: false,
+        group: "",
+        groupLimit: "",
+
+        isRetirement: false,
+        insuranceGroup: ""
     });
 
     useEffect(() => { loadFunds(); }, []);
@@ -96,7 +106,10 @@ const AdminDeduction = () => {
                 ...form,
                 taxLimit: Number(form.taxLimit),
                 expectedReturn: Number(form.expectedReturn || 0),
-                incomeLimitRate: Number(form.incomeLimitRate || 0)
+                incomeLimitRate: Number(form.incomeLimitRate || 0),
+
+                isRetirement: form.isRetirement,
+                insuranceGroup: form.insuranceGroup
             });
             toast.success("เพิ่มสำเร็จ");
             setForm({ code: "", name: "", taxLimit: "", category: "investment", isFixed: false, isCount: false, expectedReturn: "", incomeLimitRate: "", hasDividend: false });
@@ -116,7 +129,11 @@ const AdminDeduction = () => {
                 ...editForm,
                 taxLimit: Number(editForm.taxLimit),
                 expectedReturn: Number(editForm.expectedReturn || 0),
-                incomeLimitRate: Number(editForm.incomeLimitRate || 0)
+                incomeLimitRate: Number(editForm.incomeLimitRate || 0),
+
+
+                isRetirement: editForm.isRetirement,
+                insuranceGroup: editForm.insuranceGroup
             });
             toast.success("อัปเดตสำเร็จ");
             setEditId(null);
@@ -160,9 +177,9 @@ const AdminDeduction = () => {
                     />
                 </div>
             </div>
-            
+
             {/* Form เพิ่มข้อมูล */}
-            <form onSubmit={handleCreate} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-end">
+            <form onSubmit={handleCreate} className="bg-white p-9 rounded-xl shadow-sm border border-slate-100 grid grid-cols-5 gap-5 items-end">
                 {/* เลือกกลุ่มลดหย่อน */}
                 <div className="w-44">
                     <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">กลุ่มลดหย่อน</label>
@@ -209,7 +226,7 @@ const AdminDeduction = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="w-32">
+                            <div className="col-span-1">
                                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">CODE</label>
                                 <input type="text" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} className="w-full p-2 border border-slate-200 rounded-lg font-bold uppercase" />
                             </div>
@@ -226,11 +243,61 @@ const AdminDeduction = () => {
                     <label className="text-[10px] font-black uppercase text-purple-600 mb-1 block">สิทธิ์ % เงินได้</label>
                     <input type="number" value={form.incomeLimitRate} onChange={(e) => setForm({ ...form, incomeLimitRate: e.target.value })} className="w-full p-2 border border-purple-100 rounded-lg font-bold text-purple-600" />
                 </div>
-                <div className="w-32">
+                <div className="col-span-1">
                     <label className="text-[10px] font-black uppercase text-blue-600 mb-1 block">เพดาน (฿)</label>
                     <input type="number" value={form.taxLimit} onChange={(e) => setForm({ ...form, taxLimit: e.target.value })} className="w-full p-2 border border-blue-100 rounded-lg font-bold text-blue-600" />
                 </div>
+                <div className="col-span-1">
+                    <label className="text-[10px] font-black uppercase text-orange-600 mb-1 block">
+                        Group
+                    </label>
+                    <input
+                        type="text"
+                        value={form.group}
+                        onChange={(e) => setForm({ ...form, group: e.target.value })}
+                        className="w-full p-2 border border-orange-100 rounded-lg font-bold"
+                    />
+                </div>
 
+                <div className="col-span-1">
+                    <label className="text-[10px] font-black uppercase text-red-600 mb-1 block">
+                        Group Limit
+                    </label>
+                    <input
+                        type="number"
+                        value={form.groupLimit}
+                        onChange={(e) => setForm({ ...form, groupLimit: e.target.value })}
+                        className="w-full p-2 border border-red-100 rounded-lg font-bold"
+                    />
+                </div>
+
+                {/* ✅ Retirement */}
+                <div className="col-span-1">
+                    <label className="text-[10px] font-black uppercase text-indigo-600 mb-1 block">
+                        Retirement
+                    </label>
+                    <input
+                        type="checkbox"
+                        checked={form.isRetirement}
+                        onChange={() => setForm({ ...form, isRetirement: !form.isRetirement })}
+                        className="w-4 h-4 accent-indigo-600"
+                    />
+                </div>
+
+                {/* ✅ Insurance Group */}
+                <div className="w-40">
+                    <label className="text-[10px] font-black uppercase text-pink-600 mb-1 block">
+                        Insurance Group
+                    </label>
+                    <select
+                        value={form.insuranceGroup}
+                        onChange={(e) => setForm({ ...form, insuranceGroup: e.target.value })}
+                        className="w-full p-2 border border-pink-200 rounded-lg font-bold text-sm"
+                    >
+                        <option value="">-- none --</option>
+                        <option value="INSURANCE_100K">INSURANCE_100K</option>
+                    </select>
+                </div>
                 <button type="submit" disabled={loading} className="bg-blue-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-md">
                     เพิ่มรายการ
                 </button>
@@ -249,6 +316,8 @@ const AdminDeduction = () => {
                             <th className="p-4 w-[6%] text-center">ล็อค</th>
                             <th className="p-4 w-[6%] text-center">คน</th>
                             <th className="p-4 w-[6%] text-center text-emerald-600">ปันผล</th>
+                            <th className="p-4 w-[6%] text-center text-indigo-600">Retire</th>
+                            <th className="p-4 w-[10%] text-center text-pink-600">Ins.Group</th>
                             <th className="p-4 w-[12%] text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -327,6 +396,34 @@ const AdminDeduction = () => {
                                             onChange={() => handleEditCheckbox('hasDividend')}
                                             className={`w-4 h-4 ${isEditing ? 'accent-emerald-500 cursor-pointer' : 'accent-slate-300 cursor-not-allowed opacity-50'}`}
                                         />
+                                    </td>
+                                    {/* ✅ Retirement */}
+                                    <td className="p-4 text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={isEditing ? editForm.isRetirement : fund.isRetirement}
+                                            disabled={!isEditing}
+                                            onChange={() => handleEditCheckbox('isRetirement')}
+                                            className={`w-4 h-4 ${isEditing ? 'accent-indigo-600' : 'opacity-50'}`}
+                                        />
+                                    </td>
+
+                                    {/* ✅ Insurance Group */}
+                                    <td className="p-4 text-center">
+                                        {isEditing ? (
+                                            <select
+                                                value={editForm.insuranceGroup || ""}
+                                                onChange={(e) => setEditForm({ ...editForm, insuranceGroup: e.target.value })}
+                                                className="border border-pink-200 rounded px-2 py-1 text-xs"
+                                            >
+                                                <option value="">none</option>
+                                                <option value="INSURANCE_100K">INSURANCE_100K</option>
+                                            </select>
+                                        ) : (
+                                            <span className="text-xs text-slate-500">
+                                                {fund.insuranceGroup || "-"}
+                                            </span>
+                                        )}
                                     </td>
 
                                     {/* ปุ่มจัดการ */}
