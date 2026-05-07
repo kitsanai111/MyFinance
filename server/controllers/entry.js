@@ -1,6 +1,6 @@
 const prisma = require("../config/prisma")
 // นำเข้า Logic คำนวณที่คุณส่งมา
-const { RecalculateTotal, Recalculate_income_expese_Total } = require('../RecalculateController/RecalculateTotal')
+const { RecalculateTotal, Recalculate_income_expese_Total } = require('../Functions/RecalculateTotal')
 const { createActivityLog } = require('../middlewares/logger');
 
 const getThaiDateTime = (dateInput) => {
@@ -18,43 +18,18 @@ const getThaiDateTime = (dateInput) => {
     return new Date(d.getTime() + (7 * 60 * 60 * 1000));
 };
 
-// ================== GET TOTAL (แก้ปัญหา 404) ==================
-exports.getTotal = async (req, res) => {
-    try {
-        const userId = req.user.id;
 
-        // ใช้การรวมยอด (Aggregate) แบบรวดเร็วสำหรับหน้า Dashboard
-        const income = await prisma.entry.aggregate({
-            _sum: { amount: true },
-            where: { userId: parseInt(userId), type: "income" }
-        });
-
-        const expense = await prisma.entry.aggregate({
-            _sum: { amount: true },
-            where: { userId: parseInt(userId), type: "expense" }
-        });
-
-        const totalIncome = Number(income._sum.amount) || 0;
-        const totalExpense = Number(expense._sum.amount) || 0;
-        const total = Number((totalIncome - totalExpense).toFixed(2));
-
-        const now = new Date();
-        const date = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-        const time = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-
-        res.json({ total, date, time });
-
-    } catch (err) {
-        console.error("Get Total Error:", err);
-        res.status(500).json({ message: "Server Error" });
-    }
-};
 
 // ================== INCOME ==================
 exports.createIncome = async (req, res) => {
     try {
-        const { amount, userId, source, categoryId, date } = req.body;
-        if (!amount || !userId || !source || !categoryId) return res.status(400).json({ message: "Missing fields" });
+        const { amount, source, categoryId, date } = req.body;
+
+        const userId = req.user.id;
+        // console.log("Data from Friend:", req.body); // 👈 เพิ่มบรรทัดนี้เพื่อเช็กค่าที่ส่งมา
+        // console.log("User from Token:", req.user);
+        if (!amount  || !categoryId)
+            return res.status(400).json({ message: "กรุณาระบุจำนวนเงินและหมวดหมู่" });
 
         const finalDate = getThaiDateTime(date);
 
@@ -62,7 +37,7 @@ exports.createIncome = async (req, res) => {
             data: {
                 amount: parseFloat(amount),
                 type: "income",
-                source,
+                source: source || "ไม่ระบุที่มา",
                 date: finalDate,
                 category: categoryId ? { connect: { id: parseInt(categoryId) } } : undefined,
                 user: { connect: { id: parseInt(userId) } }
@@ -88,15 +63,19 @@ exports.createIncome = async (req, res) => {
 
 exports.updateIncome = async (req, res) => {
     try {
-        const { amount, userId, source, categoryId, date } = req.body
+        const { amount, source, categoryId, date } = req.body
         const id = parseInt(req.params.id)
+
+        const userId = req.user.id;
+
+        const finalDate = date ? getThaiDateTime(date) : undefined;
         const oldEntry = await prisma.entry.findUnique({ where: { id } });
         await prisma.entry.update({
             where: { id },
             data: {
                 amount: parseFloat(amount),
                 source,
-                date: date ? new Date(date) : undefined,
+                date: finalDate,
                 category: categoryId ? { connect: { id: parseInt(categoryId) } } : undefined,
                 user: { connect: { id: parseInt(userId) } }
             }
@@ -124,7 +103,10 @@ exports.listIncome = async (req, res) => {
         const count = parseInt(req.query.count) || 100
         const userId = req.user.id
         const income = await prisma.entry.findMany({
-            where: { type: "income", userId },
+            where: {
+                type: "income",
+                userId: userId
+            },
             take: count,
             orderBy: { date: "desc" },
             include: { category: true }
@@ -140,7 +122,14 @@ exports.listIncome = async (req, res) => {
 // ================== EXPENSE ==================
 exports.createExpense = async (req, res) => {
     try {
-        const { amount, userId, categoryId, date, note } = req.body
+        const { amount, categoryId, date, note } = req.body
+
+        const userId = req.user.id;
+
+        if (!amount || !categoryId) {
+            return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
+        }
+
         const finalDate = getThaiDateTime(date);
         const expense = await prisma.entry.create({
             data: {
@@ -170,8 +159,13 @@ exports.createExpense = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
     try {
-        const { amount, userId, categoryId, date, note } = req.body
+        const { amount, categoryId, date, note } = req.body
         const id = parseInt(req.params.id)
+
+        const userId = req.user.id;
+
+
+        const finalDate = date ? getThaiDateTime(date) : undefined;
         const oldEntry = await prisma.entry.findUnique({ where: { id } });
         await prisma.entry.update({
             where: { id },
@@ -179,7 +173,7 @@ exports.updateExpense = async (req, res) => {
                 amount: parseFloat(amount),
                 note,
                 category: categoryId ? { connect: { id: parseInt(categoryId) } } : undefined,
-                date: date ? new Date(date) : undefined,
+                date: finalDate,
                 user: { connect: { id: parseInt(userId) } }
             }
         })
@@ -204,7 +198,10 @@ exports.listExpense = async (req, res) => {
         const count = parseInt(req.query.count) || 100
         const userId = req.user.id
         const expense = await prisma.entry.findMany({
-            where: { type: "expense", userId },
+            where: {
+                type: "expense",
+                userId: userId
+            },
             take: count,
             orderBy: { date: "desc" },
             include: { category: true }
@@ -216,7 +213,6 @@ exports.listExpense = async (req, res) => {
     }
 }
 
-// ================== DELETE (ENTRY) ==================
 // ================== DELETE (ENTRY) ==================
 exports.removeEntry = async (req, res) => {
     try {
@@ -275,6 +271,107 @@ exports.removeEntry = async (req, res) => {
         res.json({ message: "ลบรายการและคืนงวดผ่อนชำระเรียบร้อย" });
     } catch (err) {
         console.error("Remove Entry Error:", err);
+        res.status(500).json({ message: "Error" });
+    }
+};
+
+// ================== GET TOTAL (แก้ปัญหา 404) ==================
+exports.getTotal = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // ใช้การรวมยอด (Aggregate) แบบรวดเร็วสำหรับหน้า Dashboard
+        const income = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: { userId: parseInt(userId), type: "income" }
+        });
+
+        const expense = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: { userId: parseInt(userId), type: "expense" }
+        });
+
+        const totalIncome = Number(income._sum.amount) || 0;
+        const totalExpense = Number(expense._sum.amount) || 0;
+        const total = Number((totalIncome - totalExpense).toFixed(2));
+
+        const now = new Date();
+        const date = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const time = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+        res.json({ total, date, time });
+
+    } catch (err) {
+        console.error("Get Total Error:", err);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+exports.getYearSummary = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const year = parseInt(req.params.year);
+
+        const startOfYear = new Date(`${year}-01-01T00:00:00`);
+        const endOfYear = new Date(`${year}-12-31T23:59:59`);
+
+        // 🟡 เงินก่อนปี
+        const beforeIncome = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: {
+                userId,
+                type: "income",
+                date: { lt: startOfYear }
+            }
+        });
+
+        const beforeExpense = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: {
+                userId,
+                type: "expense",
+                date: { lt: startOfYear }
+            }
+        });
+
+        const openingBalance =
+            (Number(beforeIncome._sum.amount) || 0) -
+            (Number(beforeExpense._sum.amount) || 0);
+
+        // 🟢 ปีนี้
+        const income = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: {
+                userId,
+                type: "income",
+                date: { gte: startOfYear, lte: endOfYear }
+            }
+        });
+
+        const expense = await prisma.entry.aggregate({
+            _sum: { amount: true },
+            where: {
+                userId,
+                type: "expense",
+                date: { gte: startOfYear, lte: endOfYear }
+            }
+        });
+
+        const totalIncome = Number(income._sum.amount) || 0;
+        const totalExpense = Number(expense._sum.amount) || 0;
+
+        const net = openingBalance + totalIncome - totalExpense;
+
+        res.json({
+            year,
+            openingBalance,
+            income: totalIncome,
+            expense: totalExpense,
+            net
+        });
+
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Error" });
     }
 };

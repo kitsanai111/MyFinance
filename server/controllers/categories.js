@@ -40,8 +40,14 @@ exports.create = async (req, res) => {
 
 exports.list = async (req, res) => {
     try {
+        const { type } = req.query; // รับค่าจาก query string เช่น ?type=expense
+
         const categories = await prisma.category.findMany({
-            orderBy: { id: 'desc' } // เรียงจากใหม่ไปเก่า
+            where: {
+                // ถ้าส่ง type มาให้กรองตาม type ถ้าไม่ส่งให้ดึงทั้งหมด
+                type: type ? type.toLowerCase() : undefined
+            },
+            orderBy: { name: 'asc' } // เรียงตามชื่อจะดูง่ายกว่าใน List
         });
         res.send(categories);
     } catch (err) {

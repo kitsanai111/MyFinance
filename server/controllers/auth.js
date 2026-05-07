@@ -10,31 +10,38 @@ exports.register = async (req, res) => {
     try {
         const { email, password, username } = req.body
 
-        // 1. ตรวจสอบข้อมูลที่จำเป็น
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required." })
+        // 1. เพิ่มการตรวจสอบ username เข้าไปด้วย
+        if (!email || !password || !username) {
+            return res.status(400).json({ message: "Email, password, and username are required." })
         }
 
-        // 2. ตรวจสอบอีเมลซ้ำ
+        // 2. ตรวจสอบอีเมลซ้ำ (ตามเดิม)
         const user = await prisma.user.findFirst({ where: { email } })
         if (user) {
             return res.status(400).json({ message: "Email already exists." })
         }
 
-        // 3. เข้ารหัสรหัสผ่าน
+        // 3. ตรวจสอบ username ซ้ำ (แนะนำให้เพิ่มตรงนี้ด้วยเพื่อความปลอดภัย)
+        const usernameCheck = await prisma.user.findFirst({ where: { username } })
+        if (usernameCheck) {
+            return res.status(400).json({ message: "Username already exists." })
+        }
+
+        // 4. เข้ารหัสรหัสผ่าน
         const hashPasswrd = await bcrypt.hash(password, 10)
 
-        // 4. บันทึกผู้ใช้ใหม่ (กำหนด role เริ่มต้นเป็น user และ enabled เป็น true)
+        // 5. บันทึกผู้ใช้ใหม่
         const newUser = await prisma.user.create({
             data: {
                 email,
                 password: hashPasswrd,
-                username,
-                role: 'user', // สมมติค่าเริ่มต้น
-                enabled: true // สมมติค่าเริ่มต้น
+                username: username, // มั่นใจได้ว่าตอนนี้มีค่าแน่นอน
+                role: 'user',
+                enabled: true
             },
             select: { id: true, email: true, username: true, role: true }
         })
+
         await createActivityLog(newUser.id, "REGISTER", `User registered with email: ${newUser.email}`, req);
 
         res.status(201).json({

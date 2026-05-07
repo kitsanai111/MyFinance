@@ -1,19 +1,7 @@
 const prisma = require('../config/prisma');
+const { calculateTaxStep } = require('../Functions/taxCalculator');
 
-// ✅ 1. คำนวณภาษี (คงเดิม)
-const calculateTaxStep = (netIncome) => {
-    if (netIncome <= 150000) return 0;
-    if (netIncome <= 300000) return (netIncome - 150000) * 0.05;
-    if (netIncome <= 500000) return 7500 + (netIncome - 300000) * 0.10;
-    if (netIncome <= 750000) return 27500 + (netIncome - 500000) * 0.15;
-    if (netIncome <= 1000000) return 65000 + (netIncome - 750000) * 0.20;
-    if (netIncome <= 2000000) return 115000 + (netIncome - 1000000) * 0.25;
-    if (netIncome <= 5000000) return 365000 + (netIncome - 2000000) * 0.30;
-    return 1265000 + (netIncome - 5000000) * 0.35;
-};
 
-// ✅ แก้ไขฟังก์ชัน getDeductionSummary ใน Backend
-// ✅ ฟังก์ชัน getDeductionSummary (เวอร์ชันรองรับเพดาน 500,000)
 exports.getDeductionSummary = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
@@ -35,7 +23,15 @@ exports.getDeductionSummary = async (req, res) => {
         const resultInvestments = allFundTypes.map(type => {
             const userInv = profile?.investments?.find(inv => inv.fundTypeId === type.id);
             const rawValueFromDB = userInv ? Number(userInv.amount) : 0;
-            const actualMoney = type.isCount ? (rawValueFromDB * type.taxLimit) : rawValueFromDB;
+
+            if (!userInv) {
+                return { actualMoney: 0, usedAmount: 0, rawAmount: 0, finalAmount: 0, fundType: type };
+            }
+            const actualMoney = type.isFixed && !type.isCount
+                ? Number(type.taxLimit)                          // fixed = ใช้ taxLimit เต็มๆ เสมอ (เช่น ส่วนตัว 60,000)
+                : type.isCount
+                    ? rawValueFromDB * Number(type.taxLimit)     // นับคน × ต่อคน (เช่น บุตร)
+                    : rawValueFromDB;
 
             let maxLimit = type.taxLimit;
             if (type.incomeLimitRate > 0) {
@@ -55,7 +51,7 @@ exports.getDeductionSummary = async (req, res) => {
         });
 
         // 2. แยกคำนวณยอดกลุ่มเกษียณเพื่อคุมเพดาน 500,000
-        const retirementCodes = ['RMF','SSF', 'PVD', 'GPF', 'NSF', 'PENSION_INS'];
+        const retirementCodes = ['RMF', 'SSF', 'PVD', 'GPF', 'NSF', 'PENSION_INS'];
 
         let remainingCap = 500000;
 
@@ -73,7 +69,7 @@ exports.getDeductionSummary = async (req, res) => {
             return { ...inv, finalAmount: inv.usedAmount };
         });
 
-        let generalDeduction = 0; // ส่วนตัวพื้นฐาน
+        let generalDeduction = 0;
         let retirementSum = 0;
 
         finalInvestments.forEach(inv => {

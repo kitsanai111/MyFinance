@@ -10,7 +10,8 @@ const {
     removeEntry,
     updateExpense,
     updateIncome,
-    getTotal // ✅ อย่าลืม import ตัวนี้
+    getTotal,
+    getYearSummary
 } = require("../controllers/entry");
 
 // Income
@@ -27,5 +28,6 @@ router.delete('/expense/:id', authCheck, removeEntry);
 
 // ✅ Total (สำหรับ Dashboard)
 router.get('/total', authCheck, getTotal);
+router.get('/summary/year/:year', authCheck, getYearSummary)
 
 module.exports = router;

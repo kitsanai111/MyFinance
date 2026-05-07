@@ -1,109 +1,107 @@
 const prisma = require('../config/prisma');
 const { createActivityLog } = require('../middlewares/logger');
 
-// 1. สร้างงบประมาณใหม่ (Create)
+// 1. สร้างงบประมาณใหม่ (Create) - (ส่วนนี้ของคุณโอเคแล้ว ผมปรับให้กระชับขึ้น)
 exports.createBudget = async (req, res) => {
     try {
-        const { amount, categoryId, name } = req.body; // ✅ รับ name
+        console.log("📥 [Budget] Request Body:", req.body);
+        const { amount, limit, categoryId, category, name, month, year } = req.body;
         const userId = req.user.id;
+
+        const finalName = name || "งบประมาณใหม่";
+        const finalAmount = amount || limit;
+        const finalCategoryId = categoryId || category;
+
+        if (!finalAmount || !finalCategoryId) {
+            return res.status(400).json({ message: "กรุณาระบุจำนวนเงินและหมวดหมู่" });
+        }
+
+        const targetMonth = month ? Number(month) : new Date().getMonth() + 1;
+        const targetYear = year ? Number(year) : new Date().getFullYear();
 
         const newBudget = await prisma.budget.create({
             data: {
-                name: name, // ✅ บันทึกชื่อ
-                amount: Number(amount),
-                userId: userId,
-                categoryId: Number(categoryId)
+                name: finalName.toString().trim(),
+                amount: parseFloat(finalAmount),
+                targetMonth,
+                targetYear,
+                user: { connect: { id: userId } },
+                category: { connect: { id: parseInt(finalCategoryId) } }
             }
         });
 
-        await createActivityLog(
-            userId,
-            "CREATE_BUDGET",
-            `ตั้งงบประมาณใหม่: ${name} จำนวน ฿${Number(amount).toLocaleString()}`,
-            req
-        );
+        await createActivityLog(userId, "CREATE_BUDGET", `ตั้งงบใหม่: ${finalName}`, req);
         res.json({ message: "ตั้งงบประมาณสำเร็จ", data: newBudget });
     } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "Server Error" });
+        console.error("🔥 Error:", err.message);
+        res.status(400).json({ message: "ไม่สามารถสร้างงบประมาณได้", error: err.message });
     }
 };
 
-// 2. ดึงข้อมูลและคำนวณยอดใช้จริง (Read + Calculate Spent)
+// 2. ดึงข้อมูล (Read) - (คงเดิม)
 exports.getBudgets = async (req, res) => {
     try {
         const userId = req.user.id;
-
+        const month = req.query.month ? Number(req.query.month) : new Date().getMonth() + 1;
+        const year = req.query.year ? Number(req.query.year) : new Date().getFullYear();
 
         const budgets = await prisma.budget.findMany({
-            where: { userId },
+            where: { userId, targetMonth: month, targetYear: year },
             include: { category: true }
         });
 
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth();
-
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0, 23, 59, 59);
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0, 23, 59, 59);
 
         const budgetWithSpent = await Promise.all(budgets.map(async (b) => {
-
-            // 🔴 เปลี่ยนจาก prisma.expense -> prisma.entry
             const aggregate = await prisma.entry.aggregate({
                 _sum: { amount: true },
                 where: {
                     userId,
                     categoryId: b.categoryId,
-                    type: 'expense', // ✅ สำคัญ: ต้องระบุว่าเป็นรายจ่ายเท่านั้น
-                    date: {
-                        gte: firstDay,
-                        lte: lastDay
-                    }
+                    type: 'expense',
+                    date: { gte: firstDay, lte: lastDay }
                 }
             });
-
             const spent = Number(aggregate._sum.amount) || 0;
-
             return { ...b, spent };
         }));
 
         res.json(budgetWithSpent);
     } catch (err) {
-        console.log(err);
         res.status(500).json({ message: "Server Error" });
     }
 };
 
-// 3. แก้ไขงบประมาณ (Update)
+// 3. แก้ไขงบประมาณ (Update) - ✅ แก้ไข findFirst และความปลอดภัย
 exports.updateBudget = async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, name } = req.body;
-        const userId = req.user.id; // ✅ ต้องมีตัวนี้ด้วย
+        const userId = req.user.id;
 
-        // 🚩 1. ดึงข้อมูลเก่าเก็บไว้ก่อน ไม่งั้นบรรทัดที่ 97 จะหา oldBudget ไม่เจอ
-        const oldBudget = await prisma.budget.findUnique({
-            where: { id: Number(id) },
+        // 🚩 แก้จาก findUnique เป็น findFirst เพื่อเช็คความเป็นเจ้าของได้
+        const oldBudget = await prisma.budget.findFirst({
+            where: { 
+                id: Number(id),
+                userId: userId // ✅ ต้องเป็นของ User คนกนี้เท่านั้น
+            },
         });
 
-        // 🛡️ เช็คกันพลาดถ้าหาไม่เจอ
-        if (!oldBudget) return res.status(404).json({ message: "ไม่พบข้อมูลที่ต้องการแก้ไข" });
+        if (!oldBudget) return res.status(404).json({ message: "ไม่พบข้อมูลหรือไม่มีสิทธิ์แก้ไข" });
 
-        // 2. สั่งอัปเดตจริงใน Database
         const updatedBudget = await prisma.budget.update({
             where: { id: Number(id) },
             data: {
-                amount: Number(amount),
-                name: name
+                amount: amount ? Number(amount) : oldBudget.amount,
+                name: name ? name.trim() : oldBudget.name
             }
         });
 
-        // ✅ 3. บันทึก Log (ตอนนี้จะมีทั้ง userId และ oldBudget ให้ใช้แล้ว)
         await createActivityLog(
             userId,
             "UPDATE_BUDGET",
-            `แก้ไขงบประมาณ ${oldBudget.name}: จาก ฿${oldBudget.amount.toLocaleString()} เป็น ฿${Number(amount).toLocaleString()}`,
+            `แก้ไขงบประมาณ ${oldBudget.name}: จาก ฿${Number(oldBudget.amount).toLocaleString()} เป็น ฿${Number(updatedBudget.amount).toLocaleString()}`,
             req
         );
 
@@ -114,26 +112,30 @@ exports.updateBudget = async (req, res) => {
     }
 };
 
-// 4. ลบงบประมาณ (Delete)
+// 4. ลบงบประมาณ (Delete) - ✅ แก้ไข findFirst
 exports.deleteBudget = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        // 🚩 ดึงข้อมูลก่อนลบ
-        const targetBudget = await prisma.budget.findUnique({
-            where: { id: Number(id) }
+        // 🚩 เช็คก่อนว่ามีอยู่จริงและเป็นเจ้าของไหม
+        const targetBudget = await prisma.budget.findFirst({
+            where: { 
+                id: Number(id),
+                userId: userId 
+            }
         });
 
-        if (!targetBudget) return res.status(404).json({ message: "Budget not found" });
+        if (!targetBudget) return res.status(404).json({ message: "ไม่พบข้อมูลหรือไม่มีสิทธิ์ลบ" });
 
-        await prisma.budget.delete({ where: { id: Number(id) } });
+        await prisma.budget.delete({ 
+            where: { id: Number(id) } 
+        });
 
-        // ✅ 4. บันทึก Log เมื่อลบงบประมาณ
         await createActivityLog(
             userId,
             "DELETE_BUDGET",
-            `ลบงบประมาณ: ${targetBudget.name} (วงเงินเดิม ฿${targetBudget.amount.toLocaleString()})`,
+            `ลบงบประมาณ: ${targetBudget.name}`,
             req
         );
 

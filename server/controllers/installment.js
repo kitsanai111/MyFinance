@@ -12,7 +12,7 @@ const getThaiDateTime = (dateInput) => {
 
 exports.createInstallment = async (req, res) => {
     try {
-        const { name, totalPrice, monthlyAmount, totalTerms, startDate } = req.body;
+        const { name, totalPrice, monthlyAmount, totalTerms, startDate, categoryId } = req.body;
         const userId = req.user.id;
 
         const newItem = await prisma.installment.create({
@@ -22,7 +22,8 @@ exports.createInstallment = async (req, res) => {
                 monthlyAmount: Number(monthlyAmount),
                 totalTerms: Number(totalTerms),
                 startDate: new Date(startDate),
-                currentTerm: 0, // ✅ เซ็ตค่าเริ่มต้นงวดเป็น 0 เสมอ
+                categoryId: categoryId ? Number(categoryId) : 34, // 34 คือค่า Default ของคุณ
+                currentTerm: 0,
                 userId
             }
         });

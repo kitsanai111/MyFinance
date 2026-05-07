@@ -9,7 +9,7 @@ router.post('/category', authCheck, adminCheck, create);
 router.get('/category', authCheck, list);
 router.delete('/category/:id', authCheck, adminCheck, remove);
 
-// ✅ เพิ่มบรรทัดนี้เพื่อรองรับการแก้ไข
+
 router.put('/category/:id', authCheck, adminCheck, update);
 
 module.exports = router;

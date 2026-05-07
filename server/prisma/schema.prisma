@@ -44,7 +44,6 @@ model User {
   logs      ActivityLog[]
   entries   Entry[]
 
-  taxRecords       TaxCalculation[]
   DeductionProfile DeductionProfile[]
   categories       Category[]
   goal             Goal?
@@ -61,23 +60,14 @@ model Category {
 
   entries Entry[]
 
-  user    User?    @relation(fields: [userId], references: [id])
-  userId  Int?
-  budgets Budget[]
+  user         User?         @relation(fields: [userId], references: [id])
+  userId       Int?
+  budgets      Budget[]
+  installments Installment[]
 }
+
 
 // --- Models ---
-
-model TaxCalculation {
-  id             Int      @id @default(autoincrement())
-  user           User     @relation(fields: [userId], references: [id])
-  userId         Int
-  taxableIncome  Float
-  taxPaid        Float
-  deduction      Float?
-  calculatedDate DateTime
-}
-
 model Entry {
   id            Int       @id @default(autoincrement())
   date          DateTime
@@ -88,7 +78,7 @@ model Entry {
   total         Float?
   income_total  Float?
   expense_total Float?
-  tax           Float?
+  // tax           Float?
 
   user   User @relation(fields: [userId], references: [id])
   userId Int
@@ -99,28 +89,31 @@ model Entry {
 
 // 1. ตารางกองทุน (Admin เป็นคนสร้าง)
 model FundType {
-  id              Int              @id @default(autoincrement())
-  code            String           @unique // เช่น CHILD, RMF, SSF
-  name            String
-  taxLimit        Float // เพดานเงิน หรือ เงินต่อหัว
-  category        String // family, insurance, investment, discountfund
-  isFixed         Boolean          @default(false)
-  isCount         Boolean          @default(false) // 👈 ถ้า true = นับจำนวนคน
+  id       Int     @id @default(autoincrement())
+  code     String  @unique // เช่น CHILD, RMF, SSF
+  name     String
+  taxLimit Float // เพดานเงิน 
+  category String // family, insurance, investment, discountfund
+  isFixed  Boolean @default(false)
+  isCount  Boolean @default(false) //  true = นับจำนวนคน
+
+  isRetirement   Boolean @default(false)
+  insuranceGroup String?
+
   expectedReturn  Float            @default(0)
   incomeLimitRate Float            @default(0)
-  hasDividend     Boolean          @default(false) // 👈 เพิ่มตัวนี้ (มีปันผลไหม)
+  hasDividend     Boolean          @default(false) //(มีปันผลไหม)
   investments     UserInvestment[]
 }
 
 // 2. ตารางโปรไฟล์ภาษี (เก็บค่าลดหย่อนพื้นฐาน)
 model DeductionProfile {
-  id             Int              @id @default(autoincrement())
-  userId         Int
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taxYear        Int
+  id          Int              @id @default(autoincrement())
+  userId      Int
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taxYear     Int
   // personal    Decimal @default(60000) @db.Decimal(10, 2)
-  investments    UserInvestment[]
-  deductionItems DeductionItem[]
+  investments UserInvestment[]
 
   @@unique([userId, taxYear])
 }
@@ -137,14 +130,6 @@ model UserInvestment {
   fundType   FundType         @relation(fields: [fundTypeId], references: [id])
 
   @@unique([profileId, fundTypeId])
-}
-
-model DeductionItem {
-  id                 Int              @id @default(autoincrement())
-  deductionProfile   DeductionProfile @relation(fields: [deductionProfileId], references: [id], onDelete: Cascade)
-  deductionProfileId Int
-  type               String // ประเภทเพิ่มเติม
-  amount             Decimal          @db.Decimal(10, 2)
 }
 
 model Goal {
@@ -166,6 +151,9 @@ model Budget {
   name   String?
   amount Decimal @db.Decimal(10, 2)
 
+  targetMonth Int // 1-12
+  targetYear  Int // เช่น 2026
+
   userId     Int
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId Int
@@ -185,8 +173,11 @@ model Installment {
   startDate     DateTime
   lastPaidDate  DateTime?
   status        String    @default("ACTIVE")
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
