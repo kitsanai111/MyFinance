@@ -57,21 +57,24 @@ const HomePage = () => {
             ทั้งบนเว็บไซต์และแอปมือถือ
           </p>
 
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate('/login')}
-              className={`px-8 py-4 ${gradientBg} text-white font-bold rounded-full flex items-center gap-2 shadow-xl hover:-translate-y-1 transition`}
-            >
-              เริ่มต้นใช้งาน <ArrowRight size={20} />
-            </button>
+          
+<div className="flex flex-col md:flex-row gap-4 justify-center items-center w-full px-4">
+  
+  <button
+    onClick={() => navigate('/login')}
+    className={`w-full md:w-auto px-8 py-4 ${gradientBg} text-white font-bold rounded-full flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 transition`}
+  >
+    เริ่มต้นใช้งาน <ArrowRight size={20} />
+  </button>
 
-            <button
-              onClick={() => navigate('/register')}
-              className="px-8 py-4 border border-gray-200 rounded-full font-semibold hover:bg-gray-50 transition"
-            >
-              สมัครสมาชิก
-            </button>
-          </div>
+  <button
+    onClick={() => navigate('/register')}
+    className="w-full md:w-auto px-8 py-4 border border-gray-200 rounded-full font-semibold hover:bg-gray-50 transition flex items-center justify-center"
+  >
+    สมัครสมาชิก
+  </button>
+  
+</div>
 
           {/* Dashboard Mockup */}
           <div className="mt-16 mx-auto max-w-6xl rounded-3xl overflow-hidden shadow-2xl bg-gray-100 p-2">
