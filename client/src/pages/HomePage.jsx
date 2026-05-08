@@ -211,8 +211,10 @@ const HomePage = () => {
               </button>
 
               {/* Google Play */}
-              <button className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
-                ▶ Google Play (Coming Soon)
+              <button
+                onClick={() => window.open('/filance_app.apk', '_blank')}
+                className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
+                ▶ ดาวน์โหลด Android APK
               </button>
             </div>
           </div>
