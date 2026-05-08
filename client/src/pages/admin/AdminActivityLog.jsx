@@ -39,14 +39,13 @@ const AdminActivityLog = () => {
                 toast.warning("ไม่มีข้อมูลสำหรับส่งออก");
                 return;
             }
-            const headers = ["เวลา", "ผู้ใช้งาน", "บทบาท", "การกระทำ", "รายละเอียด", "IP Address"];
+            const headers = ["เวลา", "ผู้ใช้งาน", "บทบาท", "การกระทำ", "รายละเอียด"];
             const rows = filteredLogs.map(log => [
                 new Date(log.createdAt).toLocaleString('th-TH'),
                 log.user?.username || '-',
                 log.user?.role || '-',
                 log.action,
                 log.detail || '-',
-                log.ipAddress || '-'
             ]);
             const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
             const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -130,7 +129,6 @@ const AdminActivityLog = () => {
                                 <th className="p-4 font-black text-slate-400 text-[10px] uppercase tracking-wider"><UserIcon size={14} className="inline mr-1" /> ผู้ใช้งาน</th>
                                 <th className="p-4 font-black text-slate-400 text-[10px] uppercase tracking-wider">การกระทำ</th>
                                 <th className="p-4 font-black text-slate-400 text-[10px] uppercase tracking-wider">รายละเอียด</th>
-                                <th className="p-4 font-black text-slate-400 text-[10px] uppercase tracking-wider"><Globe size={14} className="inline mr-1" /> IP Address</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -155,9 +153,6 @@ const AdminActivityLog = () => {
                                     </td>
                                     <td className="p-4 text-sm text-slate-600 italic">
                                         {log.detail || '-'}
-                                    </td>
-                                    <td className="p-4 text-xs font-mono text-slate-400">
-                                        {log.ipAddress || 'unknown'}
                                     </td>
                                 </tr>
                             ))}

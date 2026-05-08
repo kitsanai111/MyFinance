@@ -25,7 +25,6 @@ model ActivityLog {
   id        Int     @id @default(autoincrement())
   action    String // เช่น "LOGIN", "CREATE_ENTRY", "DELETE_USER"
   detail    String? // รายละเอียดเพิ่มเติม
-  ipAddress String?
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
 
