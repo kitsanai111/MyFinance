@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import useEcomStore from '../../store/ecom-store';
-import api from "../utils/api";
+import api from "../../utils/api";
 
 const adminMenus = [
   { to: "/admin", icon: <LayoutDashboard className="mr-2" />, label: "Dashboard", end: true },
