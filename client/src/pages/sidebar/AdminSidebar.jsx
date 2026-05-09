@@ -7,7 +7,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import useEcomStore from '../store/ecom-store';
+import useEcomStore from '../../store/ecom-store';
 import api from "../utils/api";
 
 const adminMenus = [
