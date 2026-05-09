@@ -1,42 +1,19 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
-import { 
-  UserCog, 
-  LogOut, 
-  ChevronDown, 
-  LayoutDashboard, 
-  Settings, 
-  ShieldCheck 
-} from "lucide-react"; 
+import { NavLink } from "react-router-dom";
+import { ChevronDown, Settings, ShieldCheck } from "lucide-react";
 import useEcomStore from '../store/ecom-store';
-import api from "../utils/api"; 
 
 const AdminNav = () => {
   const user = useEcomStore((s) => s.user);
-  const logout = useEcomStore((s) => s.logout);
-  const navigate = useNavigate();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   // ✅ ฟังก์ชัน Logout อัปเดตสถานะใน DB
-  const handleLogout = async () => {
-    try {
-      await api.post('/logout'); 
-    } catch (err) {
-      console.log("Logout status update failed");
-    } finally {
-      localStorage.clear();
-      logout();
-      toast.success("ออกจากระบบแล้ว");
-      navigate("/", { replace: true });
-    }
-  };
 
   return (
     <nav className="w-full bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50 font-sans">
-      
+
       {/* --- ด้านซ้าย: Logo --- */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center text-white">
@@ -54,7 +31,7 @@ const AdminNav = () => {
 
       {/* --- ด้านขวา: Admin Profile --- */}
       <div className="flex items-center gap-4">
-        
+
         <div className="h-4 w-[1px] bg-gray-200 mx-1"></div>
 
         {/* User Dropdown */}
@@ -86,13 +63,7 @@ const AdminNav = () => {
                   <button className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 rounded-md transition-colors">
                     <Settings size={14} /> ข้อมูลส่วนตัว
                   </button>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-md transition-colors font-bold"
-                  >
-                    <LogOut size={14} /> ออกจากระบบ
-                  </button>
+                  
                 </div>
               </div>
               {/* Overlay สำหรับปิด */}

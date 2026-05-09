@@ -5,6 +5,11 @@ import {
   ShoppingBasket, ListOrdered, LogOut, ShieldCheck
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
+import useEcomStore from '../store/ecom-store';
+import api from "../utils/api";
+
 const adminMenus = [
   { to: "/admin", icon: <LayoutDashboard className="mr-2" />, label: "Dashboard", end: true },
   { to: "adminactivityLog", icon: <UserCog className="mr-2" />, label: "ActivityLog" },
@@ -22,7 +27,21 @@ const superAdminMenus = [
 
 const AdminSidebar = () => {
   const location = useLocation(); // ✅ ดึงข้อมูล URL ปัจจุบัน
+  const logout = useEcomStore((s) => s.logout);
+  const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    try {
+      await api.post('/logout');
+    } catch (err) {
+      console.log("Logout failed");
+    } finally {
+      localStorage.clear();
+      logout();
+      toast.success("ออกจากระบบแล้ว");
+      navigate("/", { replace: true });
+    }
+  };
   // ✅ 3. Logic เลือกใช้เมนู: ถ้า Path ขึ้นต้นด้วย /superadmin ให้ใช้ชุดใหญ่
   const isSuperAdmin = location.pathname.startsWith('/superadmin');
   const menus = isSuperAdmin ? superAdminMenus : adminMenus;
@@ -56,7 +75,9 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="p-4 bg-gray-900/50 border-t border-gray-700">
-        <button className="w-full text-gray-500 px-4 py-2 hover:bg-red-600 hover:text-white rounded-lg flex items-center transition-all group font-bold">
+        <button
+          onClick={handleLogout}
+          className="w-full text-gray-500 px-4 py-2 hover:bg-red-600 hover:text-white rounded-lg flex items-center transition-all group font-bold">
           <LogOut className="mr-2 group-hover:-translate-x-1 transition-transform" />
           Logout
         </button>
