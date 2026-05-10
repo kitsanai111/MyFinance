@@ -228,11 +228,12 @@ export default function FinanceDashboard() {
   }, [filteredEntries]);
 
   const allTimeBalance = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const totalIncome = entries
-      .filter(e => e.type === "income")
+      .filter(e => e.type === "income" && new Date(e.date).getFullYear() === currentYear)
       .reduce((s, e) => s + Number(e.amount || 0), 0);
     const totalExpense = entries
-      .filter(e => e.type === "expense")
+      .filter(e => e.type === "expense" && new Date(e.date).getFullYear() === currentYear)
       .reduce((s, e) => s + Number(e.amount || 0), 0);
     return totalIncome - totalExpense;
   }, [entries]);
