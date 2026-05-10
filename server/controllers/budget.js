@@ -77,7 +77,7 @@ exports.getBudgets = async (req, res) => {
 exports.updateBudget = async (req, res) => {
     try {
         const { id } = req.params;
-        const { amount, name } = req.body;
+        const { amount, name, categoryId } = req.body;
         const userId = req.user.id;
 
         // 🚩 แก้จาก findUnique เป็น findFirst เพื่อเช็คความเป็นเจ้าของได้
@@ -94,7 +94,10 @@ exports.updateBudget = async (req, res) => {
             where: { id: Number(id) },
             data: {
                 amount: amount ? Number(amount) : oldBudget.amount,
-                name: name ? name.trim() : oldBudget.name
+                name: name ? name.trim() : oldBudget.name,
+                ...(categoryId && {
+                    category: { connect: { id: parseInt(categoryId) } }
+                }),
             }
         });
 
