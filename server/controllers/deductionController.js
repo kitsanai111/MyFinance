@@ -9,7 +9,15 @@ exports.getDeductionSummary = async (req, res) => {
 
         const allFundTypes = await prisma.fundType.findMany();
         const incomeAggr = await prisma.entry.aggregate({
-            where: { userId, type: "income" },
+            where: {
+                userId,
+                type: "income",
+                // 🚩 เพิ่มบรรทัดข้างล่างนี้เข้าไปครับ
+                createdAt: {
+                    gte: new Date(`${taxYear}-01-01T00:00:00.000Z`), // วันแรกของปี 2026
+                    lte: new Date(`${taxYear}-12-31T23:59:59.999Z`)  // วันสุดท้ายของปี 2026
+                }
+            },
             _sum: { amount: true }
         });
         const totalIncome = Number(incomeAggr._sum.amount) || 0;
