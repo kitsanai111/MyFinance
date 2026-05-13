@@ -59,7 +59,6 @@ const AdminDeduction = () => {
             { code: 'HOME_CONSTRUCT', name: 'ค่าสร้างบ้านใหม่ 2567-2568 (ลดหย่อนได้ 10,000 บาท ต่อจำนวนค่าก่อสร้างที่จ่ายจริงทุก 1 ล้านบาท (รวม VAT แล้ว) รวมแล้วไม่เกิน 100,000 บาท)', limit: 100000, isCount: false },
         ]
     };
-    // hasDividend เข้าไปใน State ฟอร์ม
     const [form, setForm] = useState({
         code: "", name: "", taxLimit: "", category: "investment",
         isFixed: false, isCount: false, expectedReturn: "",
@@ -141,11 +140,11 @@ const AdminDeduction = () => {
         } catch (err) { toast.error("อัปเดตไม่สำเร็จ"); }
     };
 
-    // ✅ ฟังก์ชันCheckbox 
+    // Checkbox 
     const handleEditCheckbox = (field) => {
         setEditForm({
             ...editForm,
-            [field]: !editForm[field] // สลับค่า true/false ใน editForm
+            [field]: !editForm[field] 
         });
     };
 
@@ -178,7 +177,6 @@ const AdminDeduction = () => {
                 </div>
             </div>
 
-            {/* Form เพิ่มข้อมูล */}
             <form onSubmit={handleCreate} className="bg-white p-9 rounded-xl shadow-sm border border-slate-100 grid grid-cols-5 gap-5 items-end">
                 {/* เลือกกลุ่มลดหย่อน */}
                 <div className="w-44">
@@ -192,7 +190,6 @@ const AdminDeduction = () => {
                     </select>
                 </div>
 
-                {/* ส่วนเลือกรายการมาตรฐาน หรือ กรอกเอง */}
                 <div className="flex-1 flex gap-4">
                     {PRESETS_BY_CATEGORY[form.category] ? (
                         <div className="w-full">
@@ -271,7 +268,7 @@ const AdminDeduction = () => {
                     />
                 </div>
 
-                {/* ✅ Retirement */}
+                {/* Retirement */}
                 <div className="col-span-1">
                     <label className="text-[10px] font-black uppercase text-indigo-600 mb-1 block">
                         Retirement
@@ -284,7 +281,7 @@ const AdminDeduction = () => {
                     />
                 </div>
 
-                {/* ✅ Insurance Group */}
+                {/* Insurance Group */}
                 <div className="w-40">
                     <label className="text-[10px] font-black uppercase text-pink-600 mb-1 block">
                         Insurance Group

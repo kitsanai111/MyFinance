@@ -32,7 +32,7 @@ const AdminActivityLog = () => {
         );
     }, [logs, searchQuery]);
 
-    // ฟังก์ชัน Export CSV
+    // Export CSV
     const exportCSV = () => {
         try {
             if (filteredLogs.length === 0) {
@@ -60,7 +60,7 @@ const AdminActivityLog = () => {
         }
     };
 
-    // ฟังก์ชัน Export PDF
+    // Export PDF
     const exportPDF = () => {
         try {
             if (filteredLogs.length === 0) {

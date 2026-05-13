@@ -6,12 +6,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import zxcvbn from "zxcvbn";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Mail, Lock, Eye, EyeOff, Loader2, Wallet, CheckCircle } from "lucide-react"; // นำเข้าไอคอน
+import { User, Mail, Lock, Eye, EyeOff, Loader2, Wallet, CheckCircle } from "lucide-react"; 
 import api from '../../utils/api';
 
-
-
-// --- Zod Schema ---
 const registerSchema = z
   .object({
     username: z.string().min(3, "Username ต้องมากกว่า 3 ตัวอักษร"),
@@ -29,7 +26,6 @@ const Register = () => {
   const [passwordScore, setPasswordScore] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
-  // State สำหรับเปิด/ปิดดูรหัสผ่าน
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -42,7 +38,6 @@ const Register = () => {
     resolver: zodResolver(registerSchema),
   });
 
-  // Watch Password for Strength Meter
   const passwordValue = watch("password");
   
   useEffect(() => {
@@ -55,21 +50,21 @@ const Register = () => {
   }, [passwordValue]);
 
   const onSubmit = async (data) => {
-    setIsLoading(true); // เริ่มโหลด
+    setIsLoading(true); 
     try {
       const res = await api.post("/register", data);
       toast.success(res.data);
     
-      navigate("/login"); // ส่งไปหน้า Login แทน Home เพื่อให้ Login ใหม่
+      navigate("/login"); 
     } catch (err) {
       const errMsg = err.response?.data?.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก";
       toast.error(errMsg);
     } finally {
-      setIsLoading(false); // จบการโหลด
+      setIsLoading(false); 
     }
   };
 
-  // Helper สำหรับสีและข้อความของ Password Strength
+
   const strengthLabels = ["Weak", "Fair", "Good", "Strong", "Excellent"];
   const strengthColors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-blue-500", "bg-green-500"];
 

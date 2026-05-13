@@ -1,5 +1,5 @@
 // server/controllers/users.js
-const prisma = require('../config/prisma'); // ⚠️ เช็ค path ให้ตรงกับไฟล์ prisma ของคุณ
+const prisma = require('../config/prisma'); 
 
 
 exports.listUsers = async (req, res) => {
@@ -24,7 +24,7 @@ exports.listUsers = async (req, res) => {
     }
 };
 
-// 2. เปลี่ยนสถานะ Enabled/Disabled
+// Enabled/Disabled
 exports.changeStatus = async (req, res) => {
     try {
         const { id, enabled } = req.body;
@@ -41,7 +41,6 @@ exports.changeStatus = async (req, res) => {
     }
 };
 
-// 3. เปลี่ยน Role Admin/User 
 exports.changeRole = async (req, res) => {
     try {
         const { id, role } = req.body;
@@ -58,7 +57,6 @@ exports.changeRole = async (req, res) => {
     }
 };
 
-// 4. ลบผู้ใช้
 exports.removeUser = async (req, res) => {
     try {
         const { id } = req.params;

@@ -26,7 +26,7 @@ exports.getDeductionSummary = async (req, res) => {
             include: { investments: { include: { fundType: true } } }
         });
 
-        // 1. คำนวณยอดเงินของแต่ละรายการ
+        // คำนวณยอดเงินของแต่ละรายการ
         const resultInvestments = allFundTypes.map(type => {
             const userInv = profile?.investments?.find(inv => inv.fundTypeId === type.id);
             const rawValueFromDB = userInv ? Number(userInv.amount) : 0;
@@ -35,9 +35,9 @@ exports.getDeductionSummary = async (req, res) => {
                 return { actualMoney: 0, usedAmount: 0, rawAmount: 0, finalAmount: 0, fundType: type, fundTypeId: type.id };
             }
             const actualMoney = type.isFixed && !type.isCount
-                ? Number(type.taxLimit)                          // fixed = ใช้ taxLimit เต็มๆ เสมอ (เช่น ส่วนตัว 60,000)
+                ? Number(type.taxLimit)                          
                 : type.isCount
-                    ? rawValueFromDB * Number(type.taxLimit)     // นับคน × ต่อคน (เช่น บุตร)
+                    ? rawValueFromDB * Number(type.taxLimit)     
                     : rawValueFromDB;
 
             let maxLimit = type.taxLimit;
@@ -57,12 +57,10 @@ exports.getDeductionSummary = async (req, res) => {
             };
         });
 
-        // 2. แยกคำนวณยอดกลุ่มเกษียณเพื่อคุมเพดาน 500,000
         const retirementCodes = ['RMF', 'SSF', 'PVD', 'GPF', 'NSF', 'PENSION_INS'];
 
         let remainingCap = 500000;
 
-        // 🔥 sort ก่อน
         const sortedInvestments = [...resultInvestments];
 
         const finalInvestments = sortedInvestments.map(inv => {
@@ -83,16 +81,13 @@ exports.getDeductionSummary = async (req, res) => {
             }
         });
 
-        // รวมทั้งหมด (หลัง cap แล้ว)
         const totalDeduction = finalInvestments.reduce(
             (sum, i) => sum + i.finalAmount,
             0
         );
-
-        // เอาไว้โชว์เฉยๆ
         const cappedRetirement = Math.min(retirementSum, 500000);
 
-        // 3. คำนวณภาษี
+        //คำนวณภาษี
         const expense = Math.min(totalIncome * 0.5, 100000);
         const netIncome = Math.max(0, totalIncome - expense - totalDeduction);
         const tax = calculateTaxStep(netIncome);
@@ -126,17 +121,15 @@ exports.updateDeduction = async (req, res) => {
             create: { userId, taxYear: 2026 }
         });
 
-        // ล้างไพ่แล้วลงใหม่ (ห้ามหาย ห้ามซ้ำ)
         await prisma.userInvestment.deleteMany({ where: { profileId: profile.id } });
 
         if (investments && Array.isArray(investments)) {
-            // ✅ ไฟล์ controllers/deductionController.js (ฟังก์ชัน updateDeduction)
             const data = investments
                 .filter(i => Number(i.amount) > 0)
                 .map(i => ({
                     profileId: profile.id,
                     fundTypeId: parseInt(i.fundTypeId),
-                    amount: parseFloat(i.amount) // เซฟค่าตรงๆ (ถ้าคนส่ง 2 ก็เซฟ 2)
+                    amount: parseFloat(i.amount) 
                 }));
 
             if (data.length > 0) {

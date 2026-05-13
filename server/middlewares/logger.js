@@ -5,8 +5,8 @@ const createActivityLog = async (userId, action, detail = null, req = null) => {
     await prisma.activityLog.create({
       data: {
         userId: Number(userId),
-        action: action, // เช่น "LOGIN", "CREATE_ENTRY"
-        detail: detail, // เช่น "ลบหมวดหมู่: ค่าอาหาร"
+        action: action, 
+        detail: detail, 
       }
     });
   } catch (err) {

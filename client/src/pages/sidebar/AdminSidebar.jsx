@@ -26,7 +26,7 @@ const superAdminMenus = [
 ];
 
 const AdminSidebar = () => {
-  const location = useLocation(); // ✅ ดึงข้อมูล URL ปัจจุบัน
+  const location = useLocation(); 
   const logout = useEcomStore((s) => s.logout);
   const navigate = useNavigate();
 
@@ -42,7 +42,7 @@ const AdminSidebar = () => {
       navigate("/", { replace: true });
     }
   };
-  // ✅ 3. Logic เลือกใช้เมนู: ถ้า Path ขึ้นต้นด้วย /superadmin ให้ใช้ชุดใหญ่
+  
   const isSuperAdmin = location.pathname.startsWith('/superadmin');
   const menus = isSuperAdmin ? superAdminMenus : adminMenus;
 

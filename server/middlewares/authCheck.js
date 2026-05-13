@@ -19,7 +19,6 @@ exports.authCheck = async (req, res, next) => {
             return res.status(401).json({ message: 'บัญชีนี้ถูกระงับการใช้งาน หรือไม่พบข้อมูล' })
         }
 
-        // ✅ ส่งข้อมูล User ที่ดึงจาก DB ไปกับ request ด้วย เพื่อให้ controller รู้ Role ล่าสุด
         req.user = user 
         next()
     } catch (err) {
@@ -28,7 +27,6 @@ exports.authCheck = async (req, res, next) => {
     }
 }
 
-// ✅ Admin Check: ยอมรับทั้ง 'admin' และ 'superadmin'
 exports.adminCheck = async (req, res, next) => {
     try {
         const { role } = req.user // ดึงจาก req.user ที่เรา set ไว้ใน authCheck
@@ -42,7 +40,6 @@ exports.adminCheck = async (req, res, next) => {
     }
 }
 
-// ✅ Super Admin Check: ยอมรับเฉพาะ 'superadmin' เท่านั้น
 exports.superAdminCheck = async (req, res, next) => {
     try {
         if (req.user.role !== 'superadmin') {

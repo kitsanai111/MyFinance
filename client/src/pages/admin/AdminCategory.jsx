@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react'; // ✅ เพิ่ม useMemo แล้ว
+import React, { useState, useEffect, useMemo } from 'react'; 
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { Trash2, PlusCircle, LayoutGrid, Edit3, X, Save, Search } from 'lucide-react'; // ✅ เพิ่มไอคอน Search
+import { Trash2, PlusCircle, LayoutGrid, Edit3, X, Save, Search } from 'lucide-react'; 
 
 const AdminCategory = () => {
     const [categories, setCategories] = useState([]);
@@ -9,10 +9,8 @@ const AdminCategory = () => {
     const [type, setType] = useState("expense");
     const [loading, setLoading] = useState(false);
 
-    // ✅ State สำหรับการค้นหา
     const [searchQuery, setSearchQuery] = useState("");
 
-    // ✅ State สำหรับการแก้ไข
     const [editId, setEditId] = useState(null);
     const [editName, setEditName] = useState("");
     const [editType, setEditType] = useState("expense");
@@ -30,7 +28,7 @@ const AdminCategory = () => {
         }
     };
 
-    // ✅ ระบบกรองข้อมูล (Search Logic)
+    // (Search Logic)
     const filteredCategories = useMemo(() => {
         return categories.filter(item =>
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -102,7 +100,6 @@ const AdminCategory = () => {
                     <LayoutGrid className="text-blue-500" /> จัดการหมวดหมู่รายรับ-รายจ่าย
                 </h1>
 
-                {/* ✅ ช่องค้นหาดีไซน์สวยๆ */}
                 <div className="relative w-full md:w-72">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <Search size={18} />
@@ -117,7 +114,6 @@ const AdminCategory = () => {
                 </div>
             </div>
 
-            {/* --- Form สำหรับเพิ่มข้อมูล --- */}
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[200px]">
                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">เพิ่มหมวดหมู่ใหม่</label>
@@ -148,7 +144,6 @@ const AdminCategory = () => {
                 </button>
             </form>
 
-            {/* --- ตารางแสดงรายการ --- */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -160,7 +155,6 @@ const AdminCategory = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* 🚩 เปลี่ยนมาใช้ filteredCategories เพื่อให้ค้นหาได้จริง */}
                         {filteredCategories.map((item) => (
                             <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50/30 transition-all group">
                                 <td className="p-4 text-xs font-black text-slate-300 group-hover:text-blue-500 transition-colors">
@@ -223,7 +217,6 @@ const AdminCategory = () => {
                     </tbody>
                 </table>
                 
-                {/* ✅ แจ้งเตือนกรณีไม่พบข้อมูล (ทั้งแบบไม่มีเลย และแบบค้นหาไม่เจอ) */}
                 {filteredCategories.length === 0 && (
                     <div className="p-16 text-center">
                         <div className="text-4xl mb-4">🔍</div>

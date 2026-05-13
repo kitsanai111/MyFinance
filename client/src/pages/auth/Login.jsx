@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// import axios from 'axios'; // ไม่ได้ใช้ในหน้านี้โดยตรง ลบออกได้ถ้าใช้ store แล้ว
 import { toast } from 'react-toastify';
 import useEcomStore from '../../store/ecom-store';
 import { useNavigate, Link } from 'react-router-dom';
@@ -9,13 +8,11 @@ const Login = () => {
   const navigate = useNavigate();
   const actionLogin = useEcomStore((state) => state.actionLogin);
   
-  // State สำหรับ Form
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
   
-  // State สำหรับ UX (Loading & Show Password)
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -28,7 +25,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // เริ่มโหลด
+    setIsLoading(true); 
 
     try {
       const res = await actionLogin(form);
@@ -43,7 +40,7 @@ const Login = () => {
       const errMsg = err.response?.data?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่";
       toast.error(errMsg);
     } finally {
-      setIsLoading(false); // จบการโหลด (ไม่ว่าจะสำเร็จหรือล้มเหลว)
+      setIsLoading(false); 
     }
   };
 
@@ -61,7 +58,6 @@ const roleRedirect = (role) => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-amber-50 p-4">
       
       <div className="bg-white shadow-2xl rounded-2xl w-full max-w-md p-8 relative overflow-hidden">
-        {/* Decoration Circle (วงกลมตกแต่งจางๆ) */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-3xl opacity-50 -translate-y-10 translate-x-10"></div>
 
         {/* --- Header Section --- */}

@@ -1,6 +1,5 @@
 const { Recalculate_income_expese_Total } = require('../RecalculateController/RecalculateTotal');
 
-// ✅ ต้องมี exports. นำหน้าชื่อฟังก์ชัน
 exports.getTotal = async (req, res) => {
     try {
         const userId = req.user.id; // มาจาก authCheck middleware
@@ -10,7 +9,6 @@ exports.getTotal = async (req, res) => {
             total: totals.netTotal,
             income: totals.incomeTotal,
             expense: totals.expenseTotal,
-            // ส่งวันที่ไปให้ Frontend ใช้แสดงผล
             date: new Date().toLocaleDateString('th-TH'),
             time: new Date().toLocaleTimeString('th-TH')
         });

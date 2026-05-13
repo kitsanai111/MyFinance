@@ -1,7 +1,6 @@
 // client/src/pages/user/ChangePassword.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// ✅ ลบอันเก่าทิ้ง แล้วใช้แค่อันนี้อันเดียวพอครับ
 import { Lock, Eye, EyeOff, Loader2, KeyRound, ShieldCheck, Mail } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
@@ -9,7 +8,7 @@ import api from '../../utils/api';
 const ChangePassword = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    email: "", // ✅ เพิ่มฟิลด์ Email
+    email: "", 
     newPassword: "",
     confirmPassword: "",
   });
@@ -29,7 +28,6 @@ const ChangePassword = () => {
 
     setIsLoading(true);
     try {
-      // ✅ ส่งทั้ง email และ newPassword ไปที่ API ตัวใหม่
       await api.post('/forgot-password', {
         email: form.email,
         newPassword: form.newPassword
@@ -57,7 +55,6 @@ const ChangePassword = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
-          {/* --- ช่อง Email (เพิ่มเข้ามาเพื่อให้ Server รู้ตัวตน) --- */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">Email Address</label>
             <div className="relative">

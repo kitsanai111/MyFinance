@@ -1,7 +1,6 @@
 const prisma = require('../config/prisma');
 const { createActivityLog } = require('../middlewares/logger');
 
-// 1. สร้างงบประมาณใหม่ (Create) - (ส่วนนี้ของคุณโอเคแล้ว ผมปรับให้กระชับขึ้น)
 exports.createBudget = async (req, res) => {
     try {
         console.log("📥 [Budget] Request Body:", req.body);
@@ -38,7 +37,6 @@ exports.createBudget = async (req, res) => {
     }
 };
 
-// 2. ดึงข้อมูล (Read) - (คงเดิม)
 exports.getBudgets = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -73,18 +71,16 @@ exports.getBudgets = async (req, res) => {
     }
 };
 
-// 3. แก้ไขงบประมาณ (Update) - ✅ แก้ไข findFirst และความปลอดภัย
 exports.updateBudget = async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, name, categoryId } = req.body;
         const userId = req.user.id;
 
-        // 🚩 แก้จาก findUnique เป็น findFirst เพื่อเช็คความเป็นเจ้าของได้
         const oldBudget = await prisma.budget.findFirst({
             where: { 
                 id: Number(id),
-                userId: userId // ✅ ต้องเป็นของ User คนกนี้เท่านั้น
+                userId: userId // 
             },
         });
 
@@ -115,13 +111,11 @@ exports.updateBudget = async (req, res) => {
     }
 };
 
-// 4. ลบงบประมาณ (Delete) - ✅ แก้ไข findFirst
 exports.deleteBudget = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        // 🚩 เช็คก่อนว่ามีอยู่จริงและเป็นเจ้าของไหม
         const targetBudget = await prisma.budget.findFirst({
             where: { 
                 id: Number(id),

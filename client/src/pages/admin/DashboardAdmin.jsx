@@ -14,12 +14,10 @@ import {
 } from 'recharts';
 import html2pdf from 'html2pdf.js';
 
-// ฟังก์ชันแปลงวันที่เป็น timezone ไทย (UTC+7)
 const toThaiDateString = (dateStr) => {
   const date = new Date(dateStr);
-  // บวก 7 ชั่วโมงเพื่อแปลงเป็น UTC+7
   const thaiDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-  return thaiDate.toISOString().split('T')[0]; // yyyy-mm-dd
+  return thaiDate.toISOString().split('T')[0]; 
 };
 
 const toThaiLocaleDateString = (dateStr) => {
@@ -80,9 +78,6 @@ const DashboardAdmin = () => {
     }
   };
 
-  // --- 📊 Chart Data ---
-
-  // จำนวน User ใหม่รายวัน (7 วันล่าสุด) - ใช้ timezone ไทย
   const newUsersPerDay = (() => {
     const map = {};
     users.forEach(u => {
@@ -98,14 +93,12 @@ const DashboardAdmin = () => {
       }));
   })();
 
-  // สัดส่วน Role
   const roleData = (() => {
     const map = {};
     users.forEach(u => { map[u.role] = (map[u.role] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name: name.toUpperCase(), value }));
   })();
 
-  // การ Login รายวัน (7 วันล่าสุด) - ใช้ timezone ไทย
   const loginPerDay = (() => {
     const map = {};
     logs.filter(l => l.action === 'LOGIN').forEach(l => {
@@ -121,13 +114,11 @@ const DashboardAdmin = () => {
       }));
   })();
 
-  // Online / Offline
   const onlineData = [
     { name: 'ONLINE', value: users.filter(u => u.enabled).length },
     { name: 'OFFLINE', value: users.filter(u => !u.enabled).length },
   ];
 
-  // --- 📄 Export ---
   const exportCSV = () => {
     if (filteredUsers.length === 0) return toast.warning("ไม่มีข้อมูล");
     const header = "ID,Username,Role,Status,Created At\n";
@@ -154,7 +145,6 @@ const DashboardAdmin = () => {
     html2pdf().set(opt).from(element).save().then(() => toast.success("ส่งออก PDF สำเร็จ"));
   };
 
-  // --- ⚡ Toggle / Delete ---
   const handleToggleStatus = async (userId, currentStatus, targetRole) => {
     if (currentUser.role === 'admin' && targetRole === 'superadmin')
       return toast.error("คุณไม่มีสิทธิ์ระงับการใช้งานระดับ Superadmin");
@@ -184,7 +174,6 @@ const DashboardAdmin = () => {
     finally { setIsDeleteModalOpen(false); setUserToDelete(null); }
   };
 
-  // --- Filter (timezone ไทย) ---
   const filteredUsers = users.filter(user => {
     const matchName = user.username?.toLowerCase().includes(searchTerm.toLowerCase());
     if (!startDate && !endDate) return matchName;
@@ -251,7 +240,7 @@ const DashboardAdmin = () => {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* กราฟ 1: User ใหม่รายวัน */}
+          {/* กราฟ User ใหม่รายวัน */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <UserPlus size={16} className="text-amber-500" /> User ใหม่รายวัน (7 วันล่าสุด)
@@ -269,7 +258,7 @@ const DashboardAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 2: สัดส่วน Role */}
+          {/* กราฟ สัดส่วน Role */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <PieChart size={16} className="text-indigo-500" /> สัดส่วน Role
@@ -287,7 +276,7 @@ const DashboardAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 3: Login รายวัน */}
+          {/* กราฟ Login รายวัน */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingUp size={16} className="text-blue-500" /> การ Login รายวัน (7 วันล่าสุด)
@@ -305,7 +294,7 @@ const DashboardAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 4: Online/Offline */}
+          {/* กราฟ Online/Offline */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <Activity size={16} className="text-green-500" /> สถานะ User

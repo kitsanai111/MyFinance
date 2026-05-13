@@ -13,7 +13,6 @@ import {
 } from 'recharts';
 import html2pdf from 'html2pdf.js';
 
-// ฟังก์ชันแปลงวันที่เป็น timezone ไทย (UTC+7)
 const toThaiDateString = (dateStr) => {
   const date = new Date(dateStr);
   const thaiDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
@@ -33,7 +32,7 @@ const CHART_COLORS = ['#F59E0B', '#6366F1', '#10B981', '#EF4444', '#3B82F6', '#8
 const DashboardSuperAdmin = () => {
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -127,9 +126,6 @@ const DashboardSuperAdmin = () => {
     } catch { toast.error("อัปเดตไม่สำเร็จ"); }
   };
 
-  // --- 📊 Chart Data ---
-
-  // จำนวน User ใหม่รายวัน (7 วันล่าสุด)
   const newUsersPerDay = (() => {
     const map = {};
     users.forEach(u => {
@@ -145,14 +141,12 @@ const DashboardSuperAdmin = () => {
       }));
   })();
 
-  // สัดส่วน Role
   const roleData = (() => {
     const map = {};
     users.forEach(u => { map[u.role] = (map[u.role] || 0) + 1; });
     return Object.entries(map).map(([name, value]) => ({ name: name.toUpperCase(), value }));
   })();
 
-  // การ Login รายวัน (7 วันล่าสุด)
   const loginPerDay = (() => {
     const map = {};
     logs.filter(l => l.action === 'LOGIN').forEach(l => {
@@ -168,13 +162,11 @@ const DashboardSuperAdmin = () => {
       }));
   })();
 
-  // Online / Offline
   const onlineData = [
     { name: 'ONLINE', value: users.filter(u => u.enabled).length },
     { name: 'OFFLINE', value: users.filter(u => !u.enabled).length },
   ];
 
-  // --- Filter (timezone ไทย) ---
   const filteredUsers = users.filter(user => {
     const matchName = user.username?.toLowerCase().includes(searchTerm.toLowerCase());
     if (!startDate && !endDate) return matchName;
@@ -241,7 +233,6 @@ const DashboardSuperAdmin = () => {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* กราฟ 1: User ใหม่รายวัน */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <UserPlus size={16} className="text-amber-500" /> User ใหม่รายวัน (7 วันล่าสุด)
@@ -259,7 +250,6 @@ const DashboardSuperAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 2: สัดส่วน Role */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <PieChart size={16} className="text-indigo-500" /> สัดส่วน Role
@@ -278,7 +268,6 @@ const DashboardSuperAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 3: Login รายวัน */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingUp size={16} className="text-blue-500" /> การ Login รายวัน (7 วันล่าสุด)
@@ -296,7 +285,6 @@ const DashboardSuperAdmin = () => {
             ) : <p className="text-gray-400 text-sm text-center py-10">ไม่มีข้อมูล</p>}
           </div>
 
-          {/* กราฟ 4: Online/Offline */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
               <Activity size={16} className="text-green-500" /> สถานะ User
@@ -315,7 +303,6 @@ const DashboardSuperAdmin = () => {
           </div>
         </div>
 
-        {/* Search & Filter */}
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -393,7 +380,7 @@ const DashboardSuperAdmin = () => {
           </table>
         </div>
 
-        {/* Modal: Add Admin */}
+        {/* Add Admin */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 relative animate-in zoom-in-95">
@@ -420,7 +407,7 @@ const DashboardSuperAdmin = () => {
           </div>
         )}
 
-        {/* Modal: Delete */}
+        {/* Delete */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200">

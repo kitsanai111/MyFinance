@@ -2,7 +2,6 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { createActivityLog } = require('../middlewares/logger');
 
-// ✅ 1. ดึงรายการทั้งหมด
 exports.getAllFundTypes = async (req, res) => {
     try {
         const funds = await prisma.fundType.findMany({
@@ -14,10 +13,9 @@ exports.getAllFundTypes = async (req, res) => {
     }
 };
 
-// ✅ 2. เพิ่มกองทุนใหม่
 exports.createFundType = async (req, res) => {
     try {
-        const userId = req.user?.id; // 🚩 เพิ่มบรรทัดนี้
+        const userId = req.user?.id; 
         const {
             code, name, taxLimit, description, category,
             isFixed, isCount, expectedReturn, incomeLimitRate,
@@ -39,7 +37,6 @@ exports.createFundType = async (req, res) => {
             }
         });
 
-        // ✅ บันทึก Log
         await createActivityLog(
             userId,
             "CREATE_DEDUCTION",
@@ -53,7 +50,6 @@ exports.createFundType = async (req, res) => {
     }
 };
 
-// ✅ 3. แก้ไขข้อมูล
 exports.updateFundType = async (req, res) => {
     try {
         const { id } = req.params;
@@ -64,7 +60,6 @@ exports.updateFundType = async (req, res) => {
             hasDividend
         } = req.body;
 
-        // 🚩 ดึงข้อมูลเก่ามาก่อนเพื่อเอาชื่อไปลง Log
         const oldFund = await prisma.fundType.findUnique({ where: { id: Number(id) } });
 
         const updated = await prisma.fundType.update({
@@ -82,7 +77,6 @@ exports.updateFundType = async (req, res) => {
             }
         });
 
-        // ✅ บันทึก Log
         await createActivityLog(
             userId,
             "UPDATE_DEDUCTION",
@@ -96,20 +90,19 @@ exports.updateFundType = async (req, res) => {
     }
 };
 
-// ✅ 4. ลบกองทุน
+
 exports.deleteFundType = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user?.id; // 🚩 เพิ่มบรรทัดนี้
 
-        // 🚩 ดึงข้อมูลก่อนลบเพื่อเอาชื่อไปลง Log
+
         const target = await prisma.fundType.findUnique({ where: { id: Number(id) } });
 
         await prisma.fundType.delete({
             where: { id: Number(id) }
         });
 
-        // ✅ บันทึก Log
         await createActivityLog(
             userId,
             "DELETE_DEDUCTION",

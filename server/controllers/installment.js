@@ -22,7 +22,7 @@ exports.createInstallment = async (req, res) => {
                 monthlyAmount: Number(monthlyAmount),
                 totalTerms: Number(totalTerms),
                 startDate: new Date(startDate),
-                categoryId: categoryId ? Number(categoryId) : 34, // 34 คือค่า Default ของคุณ
+                categoryId: categoryId ? Number(categoryId) : 34, 
                 currentTerm: 0,
                 userId
             }
@@ -50,7 +50,6 @@ exports.getInstallments = async (req, res) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // 🌟 ไม่ต้องคำนวณงวดจากเดือนแล้ว เพราะเราดึง currentTerm จากฐานข้อมูลตรงๆ ได้เลย
         const result = installments.map(item => {
             let paidThisMonth = false;
             const today = new Date();
@@ -75,7 +74,6 @@ exports.getInstallments = async (req, res) => {
     }
 };
 
-// 🔴 แก้ไขใน installment.js ฟังก์ชัน togglePaid
 exports.togglePaid = async (req, res) => {
     try {
         const { id } = req.params;
@@ -89,9 +87,8 @@ exports.togglePaid = async (req, res) => {
         }
 
         const nextTerm = item.currentTerm + 1;
-        const amountPaid = Number(item.monthlyAmount); // ยอดที่จ่ายจริง
+        const amountPaid = Number(item.monthlyAmount); 
 
-        // ✅ 1. อัปเดตตาราง Installment
         const updated = await prisma.installment.update({
             where: { id: Number(id) },
             data: {
@@ -101,12 +98,10 @@ exports.togglePaid = async (req, res) => {
             }
         });
 
-        // ✅ 2. สร้างรายจ่าย (Entry) - ปรับ Note ให้มีงวดกำกับด้วย
         await prisma.entry.create({
             data: {
                 amount: amountPaid,
                 type: "expense",
-                // 🚩 ใช้รูปแบบนี้เพื่อให้ Logic 'ลบแล้วงวดลด' ทำงานได้ และดูสวยงาม
                 note: `ผ่อน: ${item.name} (งวดที่ ${nextTerm}/${item.totalTerms})`,
                 date: getThaiDateTime(new Date()),
                 user: { connect: { id: parseInt(userId) } },
@@ -114,7 +109,6 @@ exports.togglePaid = async (req, res) => {
             }
         });
 
-        // ✅ 3. บันทึก Log - บอกทั้งงวดและยอดเงิน
         await createActivityLog(
             userId,
             "PAY_INSTALLMENT",
@@ -134,20 +128,16 @@ exports.deleteInstallment = async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
 
-        // 🚩 1. ดึงข้อมูลมาเก็บไว้ในตัวแปร target ก่อน ไม่งั้นบรรทัดที่ 115 จะหาไม่เจอ
         const target = await prisma.installment.findUnique({
             where: { id: Number(id) }
         });
 
-        // 🛡️ เช็คกันพลาดถ้าไม่พบข้อมูล
         if (!target) return res.status(404).json({ message: "ไม่พบรายการที่ต้องการลบ" });
 
-        // 2. สั่งลบจริงใน Database
         await prisma.installment.delete({
             where: { id: Number(id) }
         });
 
-        // ✅ 3. บันทึก Log (ตอนนี้จะมีตัวแปร target ให้ใช้แล้ว)
         await createActivityLog(
             userId,
             "DELETE_INSTALLMENT",

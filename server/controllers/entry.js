@@ -1,20 +1,14 @@
 const prisma = require("../config/prisma")
-// นำเข้า Logic คำนวณที่คุณส่งมา
 const { RecalculateTotal, Recalculate_income_expese_Total } = require('../Functions/RecalculateTotal')
 const { createActivityLog } = require('../middlewares/logger');
 
 const getThaiDateTime = (dateInput) => {
-    // 1. สร้าง Date จากวันที่ input (ถ้ามี) หรือเวลาปัจจุบัน
     const d = dateInput ? new Date(dateInput) : new Date();
-    const now = new Date(); // สร้างตัวแปรเวลาปัจจุบัน (วินาทีที่กดบันทึก)
-
-    // 2. ถ้ามีการระบุวันที่ (dateInput) ให้เอาเวลาปัจจุบันไป "แปะ" ใส่
-    // เพื่อให้มันไม่เป็น 00:00:00
+    const now = new Date(); 
     if (dateInput) {
         d.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
     }
 
-    // 3. บวก 7 ชั่วโมงเพื่อปรับเป็นเวลาไทย (+7)
     return new Date(d.getTime() + (7 * 60 * 60 * 1000));
 };
 
@@ -26,7 +20,7 @@ exports.createIncome = async (req, res) => {
         const { amount, source, categoryId, date } = req.body;
 
         const userId = req.user.id;
-        // console.log("Data from Friend:", req.body); // 👈 เพิ่มบรรทัดนี้เพื่อเช็กค่าที่ส่งมา
+        // console.log("Data from Friend:", req.body); 
         // console.log("User from Token:", req.user);
         if (!amount  || !categoryId)
             return res.status(400).json({ message: "กรุณาระบุจำนวนเงินและหมวดหมู่" });
@@ -50,7 +44,6 @@ exports.createIncome = async (req, res) => {
             req
         );
 
-        // ✅ เรียกใช้ Logic คำนวณยอดใหม่
         await RecalculateTotal(userId);
         await Recalculate_income_expese_Total(userId);
 
@@ -81,7 +74,6 @@ exports.updateIncome = async (req, res) => {
             }
         })
 
-        // ✅ 3. บันทึก Log เมื่อแก้ไขรายได้
         await createActivityLog(
             userId,
             "UPDATE_INCOME",
@@ -225,14 +217,10 @@ exports.removeEntry = async (req, res) => {
         const typeLabel = entry.type === "income" ? "รายได้" : "รายจ่าย";
         const entryName = entry.source || entry.note || "ไม่มีชื่อ";
 
-        // 🚩 แก้ไขตรงนี้ให้ฉลาดขึ้น
         if (entry.type === "expense" && entry.note && entry.note.includes("ผ่อน:")) {
 
-            // 1. ตัด "ผ่อน: " ออก
             let cleanedName = entry.note.replace("ผ่อน: ", "").trim();
 
-            // 2. ถ้ามีคำว่า " (งวดที่" ให้ตัดทิ้งเอาแค่ชื่อรายการข้างหน้า
-            // เช่น "iPhone (งวดที่ 1/10)" -> จะเหลือแค่ "iPhone"
             if (cleanedName.includes(" (งวดที่")) {
                 cleanedName = cleanedName.split(" (งวดที่")[0].trim();
             }
@@ -240,7 +228,7 @@ exports.removeEntry = async (req, res) => {
             const installmentItem = await prisma.installment.findFirst({
                 where: {
                     userId: userId,
-                    name: cleanedName // คราวนี้ชื่อจะตรงกับใน DB แน่นอน
+                    name: cleanedName 
                 }
             });
 
@@ -275,12 +263,11 @@ exports.removeEntry = async (req, res) => {
     }
 };
 
-// ================== GET TOTAL (แก้ปัญหา 404) ==================
+// ================== GET TOTAL  ==================
 exports.getTotal = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // ใช้การรวมยอด (Aggregate) แบบรวดเร็วสำหรับหน้า Dashboard
         const income = await prisma.entry.aggregate({
             _sum: { amount: true },
             where: { userId: parseInt(userId), type: "income" }
@@ -315,7 +302,6 @@ exports.getYearSummary = async (req, res) => {
         const startOfYear = new Date(`${year}-01-01T00:00:00`);
         const endOfYear = new Date(`${year}-12-31T23:59:59`);
 
-        // 🟡 เงินก่อนปี
         const beforeIncome = await prisma.entry.aggregate({
             _sum: { amount: true },
             where: {
@@ -338,7 +324,6 @@ exports.getYearSummary = async (req, res) => {
             (Number(beforeIncome._sum.amount) || 0) -
             (Number(beforeExpense._sum.amount) || 0);
 
-        // 🟢 ปีนี้
         const income = await prisma.entry.aggregate({
             _sum: { amount: true },
             where: {
