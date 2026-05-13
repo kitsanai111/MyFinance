@@ -1,8 +1,6 @@
 // server/controllers/users.js
 const prisma = require('../config/prisma'); // ⚠️ เช็ค path ให้ตรงกับไฟล์ prisma ของคุณ
 
-// 1. ดึงข้อมูล Users ทั้งหมด
-// server/controllers/users.js
 
 exports.listUsers = async (req, res) => {
     try {
@@ -13,8 +11,7 @@ exports.listUsers = async (req, res) => {
                 role: true,
                 enabled: true,
                 createdAt: true,
-                // updatedAt: true,  <-- ❌ ลบบรรทัดนี้ทิ้งครับ เพราะใน DB ไม่มี
-                email: true // (ถ้าอยากได้ email ให้ใส่บรรทัดนี้แทน)
+                email: true 
             },
             orderBy: {
                 createdAt: "desc"
@@ -44,7 +41,7 @@ exports.changeStatus = async (req, res) => {
     }
 };
 
-// 3. เปลี่ยน Role Admin/User (ถ้ามี)
+// 3. เปลี่ยน Role Admin/User 
 exports.changeRole = async (req, res) => {
     try {
         const { id, role } = req.body;

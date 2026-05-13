@@ -35,7 +35,7 @@ const CHART_COLORS = ['#F59E0B', '#6366F1', '#10B981', '#EF4444', '#3B82F6', '#8
 const DashboardAdmin = () => {
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -392,9 +392,6 @@ const DashboardAdmin = () => {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button className="p-2 text-blue-400 hover:bg-blue-50 rounded-lg transition-colors">
-                          <FileSearch size={18} />
-                        </button>
                         <button
                           onClick={() => confirmDelete(item.id, item.role, item.username)}
                           disabled={isRestricted}

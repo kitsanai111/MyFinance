@@ -15,3 +15,4 @@ const createActivityLog = async (userId, action, detail = null, req = null) => {
 };
 
 module.exports = { createActivityLog };
+
