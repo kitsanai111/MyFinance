@@ -503,7 +503,7 @@ export default function FinanceDashboard() {
                 <div className={`text-4xl font-extrabold tracking-tight ${allTimeBalance >= 0 ? 'text-gray-900' : 'text-red-500'}`}>
                   {allTimeBalance.toLocaleString()} <span className="text-lg font-medium text-gray-400">฿</span>
                 </div>
-                <div className="text-xs text-gray-400 mt-1 font-medium bg-gray-50 inline-block px-3 py-1 rounded-full">ยอดรวมคงเหลือทั้งหมด (All Time)</div>
+                <div className="text-xs text-gray-400 mt-1 font-medium bg-gray-50 inline-block px-3 py-1 rounded-full">ยอดรวมทั้งหมด (All Time)</div>
 
               </div>
 

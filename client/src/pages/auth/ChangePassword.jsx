@@ -71,7 +71,7 @@ const ChangePassword = () => {
                 onChange={handleOnChange}
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all bg-gray-50 focus:bg-white"
-                placeholder="กรอกอีเมลที่ใช้สมัคร"
+                placeholder="Email"
               />
             </div>
           </div>
@@ -89,8 +89,8 @@ const ChangePassword = () => {
                 value={form.newPassword}
                 onChange={handleOnChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white"
-                placeholder="ตั้งรหัสผ่านใหม่"
+                className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+                placeholder="NewPassword"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -111,8 +111,8 @@ const ChangePassword = () => {
                 value={form.confirmPassword}
                 onChange={handleOnChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white"
-                placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+                placeholder="ConfirmPassword"
               />
             </div>
           </div>

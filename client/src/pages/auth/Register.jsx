@@ -131,7 +131,7 @@ const Register = () => {
               </div>
               <input
                 {...register("password")}
-                className={`w-full pl-10 pr-12 py-2.5 border rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200'}`}
+                className={`w-full pl-10 pr-12 py-2.5 border rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white [&::-ms-reveal]:hidden [&::-ms-clear]:hidden ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200'}`}
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
               />
@@ -172,7 +172,7 @@ const Register = () => {
               </div>
               <input
                 {...register("confirmPassword")}
-                className={`w-full pl-10 pr-12 py-2.5 border rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200'}`}
+                className={`w-full pl-10 pr-12 py-2.5 border rounded-xl focus:ring-2 focus:ring-amber-400 outline-none transition-all bg-gray-50 focus:bg-white [&::-ms-reveal]:hidden [&::-ms-clear]:hidden ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200'}`}
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
               />

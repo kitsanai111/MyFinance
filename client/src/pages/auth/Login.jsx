@@ -108,7 +108,7 @@ const roleRedirect = (role) => {
                 name="password"
                 onChange={handleOnChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all bg-gray-50 focus:bg-white"
+                className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all bg-gray-50 focus:bg-white [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                 placeholder="••••••••"
               />
               {/* ปุ่ม Show/Hide Password */}
