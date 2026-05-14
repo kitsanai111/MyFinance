@@ -85,3 +85,16 @@ exports.updateProfile = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+exports.updateUsername = async (req, res) => {
+    try {
+        const { userId, username } = req.body;
+        await prisma.user.update({
+            where: { id: Number(userId) },
+            data: { username }
+        });
+        res.json({ message: "แก้ไข username สำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
