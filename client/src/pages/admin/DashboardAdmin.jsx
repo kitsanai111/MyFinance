@@ -193,9 +193,9 @@ const DashboardAdmin = () => {
 
   const handleChangeRole = async (userId, newRole) => {
     try {
-      await api.put('/change-role', { id: userId, role: newRole });
+      await api.post('/change-role', { id: userId, role: newRole });
+
       toast.success("เปลี่ยน role สำเร็จ");
-      // อัปเดต selectedUser ให้แสดง role ใหม่ทันที
       setSelectedUser(prev => ({ ...prev, role: newRole }));
       loadData();
     } catch (err) {

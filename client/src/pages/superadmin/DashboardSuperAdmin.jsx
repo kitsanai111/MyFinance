@@ -187,9 +187,9 @@ const DashboardSuperAdmin = () => {
 
   const handleChangeRole = async (userId, newRole) => {
     try {
-      await api.put('/change-role', { id: userId, role: newRole });
+      await api.post('/change-role', { id: userId, role: newRole });
       toast.success("เปลี่ยน role สำเร็จ");
-      // อัปเดต selectedUser ให้แสดง role ใหม่ทันที
+
       setSelectedUser(prev => ({ ...prev, role: newRole }));
       loadData();
     } catch (err) {
@@ -515,6 +515,7 @@ const DashboardSuperAdmin = () => {
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Role</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="font-bold text-amber-600 uppercase">{selectedUser.role}</p>
+
                   {selectedUser.id !== currentUser.id && (
                     <select
                       value={selectedUser.role}
