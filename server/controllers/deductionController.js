@@ -5,7 +5,7 @@ const { calculateTaxStep } = require('../Functions/taxCalculator');
 exports.getDeductionSummary = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
-        const taxYear = 2026;
+        const taxYear = new Date().getFullYear();
 
         const allFundTypes = await prisma.fundType.findMany();
         const incomeAggr = await prisma.entry.aggregate({
@@ -13,8 +13,8 @@ exports.getDeductionSummary = async (req, res) => {
                 userId,
                 type: "income",
                 date: {
-                    gte: new Date('2026-01-01'),
-                    lte: new Date('2026-12-31')
+                    gte: new Date(`${taxYear}-01-01`),
+                    lte: new Date(`${taxYear}-12-31`)
                 }
             },
             _sum: { amount: true }
@@ -35,9 +35,9 @@ exports.getDeductionSummary = async (req, res) => {
                 return { actualMoney: 0, usedAmount: 0, rawAmount: 0, finalAmount: 0, fundType: type, fundTypeId: type.id };
             }
             const actualMoney = type.isFixed && !type.isCount
-                ? Number(type.taxLimit)                          
+                ? Number(type.taxLimit)
                 : type.isCount
-                    ? rawValueFromDB * Number(type.taxLimit)     
+                    ? rawValueFromDB * Number(type.taxLimit)
                     : rawValueFromDB;
 
             let maxLimit = type.taxLimit;
@@ -114,11 +114,12 @@ exports.updateDeduction = async (req, res) => {
     try {
         const userId = parseInt(req.user.id);
         const { investments } = req.body;
+        const taxYear = new Date().getFullYear();
 
         const profile = await prisma.deductionProfile.upsert({
-            where: { userId_taxYear: { userId, taxYear: 2026 } },
+            where: { userId_taxYear: { userId, taxYear } },
             update: {},
-            create: { userId, taxYear: 2026 }
+            create: { userId, taxYear }
         });
 
         await prisma.userInvestment.deleteMany({ where: { profileId: profile.id } });
@@ -129,7 +130,7 @@ exports.updateDeduction = async (req, res) => {
                 .map(i => ({
                     profileId: profile.id,
                     fundTypeId: parseInt(i.fundTypeId),
-                    amount: parseFloat(i.amount) 
+                    amount: parseFloat(i.amount)
                 }));
 
             if (data.length > 0) {

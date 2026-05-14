@@ -2,7 +2,6 @@ const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
 const { createActivityLog } = require('../middlewares/logger');
 
-// 1. ดึงรายชื่อผู้ใช้ (เพิ่มระบบค้นหาตามช่วงเวลา)
 exports.listUsers = async (req, res) => {
     try {
         const { startDate, endDate, username } = req.query;
@@ -14,7 +13,7 @@ exports.listUsers = async (req, res) => {
                 gte: new Date(startDate + "T00:00:00.000Z"),
                 lte: new Date(endDate + "T23:59:59.999Z"),
             } : undefined,
-            // 🛡️ กรองสิทธิ์: Admin ปกติจะไม่เห็นรายชื่อ Superadmin
+            //  Admin ปกติจะไม่เห็นรายชื่อ Superadmin
             role: requesterRole === 'admin' ? { not: 'superadmin' } : undefined
         };
 
@@ -35,7 +34,6 @@ exports.listUsers = async (req, res) => {
     }
 };
 
-// 2. [NEW] สร้าง Admin โดย Superadmin
 exports.createAdminBySuper = async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -72,7 +70,6 @@ exports.createAdminBySuper = async (req, res) => {
     }
 };
 
-// 3. เปลี่ยนสถานะ (ปรับปรุงสิทธิ์)
 exports.changeUserStatus = async (req, res) => {
     try {
         const { id, enabled } = req.body;
@@ -81,7 +78,6 @@ exports.changeUserStatus = async (req, res) => {
         const targetUser = await prisma.user.findUnique({ where: { id: Number(id) } });
         if (!targetUser) return res.status(404).json({ message: "ไม่พบผู้ใช้" });
 
-        // 🛡️ ห้าม Admin ปกติ ยุ่งกับ Admin คนอื่นหรือ Superadmin
         if (requesterRole === 'admin' && (targetUser.role === 'admin' || targetUser.role === 'superadmin')) {
             return res.status(403).json({ message: "คุณไม่มีสิทธิ์จัดการผู้ดูแลระบบ" });
         }
@@ -102,7 +98,6 @@ exports.changeUserStatus = async (req, res) => {
     }
 };
 
-// 4. ลบผู้ใช้ (ปรับปรุงสิทธิ์)
 exports.removeUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -113,7 +108,6 @@ exports.removeUser = async (req, res) => {
 
         if (req.user.id === Number(id)) return res.status(400).json({ message: "ลบตัวเองไม่ได้" });
 
-        // 🛡️ ห้าม Admin ปกติ ลบ Admin หรือ Superadmin
         if (requesterRole === 'admin' && (targetUser.role === 'admin' || targetUser.role === 'superadmin')) {
             return res.status(403).json({ message: "คุณไม่มีสิทธิ์ลบผู้ดูแลระบบ" });
         }
@@ -131,7 +125,6 @@ exports.removeUser = async (req, res) => {
     }
 };
 
-// ✅ ดึงประวัติการใช้งานทั้งหมด
 exports.getActivityLogs = async (req, res) => {
     try {
         const logs = await prisma.activityLog.findMany({
@@ -144,8 +137,8 @@ exports.getActivityLogs = async (req, res) => {
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' }, // เอาล่าสุดขึ้นก่อน
-            take: 500 // ดึงมา 500 รายการล่าสุด
+            orderBy: { createdAt: 'desc' }, 
+            take: 500 
         });
         res.json(logs);
     } catch (err) {

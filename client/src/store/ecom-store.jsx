@@ -7,14 +7,12 @@ const ecomStore = (set) => ({
   user: null,
   token: null,
 
-  // ✅ แก้ไข: ลบข้อมูลออกจาก LocalStorage ด้วย
   logout: () => {
     set({
       user: null,
       token: null,
     });
     
-    // สั่งลบ Key ออกจาก Browser ทันที
     localStorage.removeItem("ecom-store"); 
   },
 
@@ -23,7 +21,6 @@ const ecomStore = (set) => ({
 
     const res = await axios.post(LOGIN_ENDPOINT, form);
 
-    // backend ส่ง payload + token
     set({
       user: res.data.payload,
       token: res.data.token,
@@ -35,7 +32,7 @@ const ecomStore = (set) => ({
 
 const useEcomStore = create(
   persist(ecomStore, {
-    name: "ecom-store", // ชื่อ key ที่อยู่ใน localStorage
+    name: "ecom-store", 
     storage: createJSONStorage(() => localStorage),
   })
 );

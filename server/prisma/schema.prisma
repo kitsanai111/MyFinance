@@ -101,7 +101,7 @@ model FundType {
 
   expectedReturn  Float            @default(0)
   incomeLimitRate Float            @default(0)
-  hasDividend     Boolean          @default(false) //(มีปันผลไหม)
+  hasDividend     Boolean          @default(false) 
   investments     UserInvestment[]
 }
 
@@ -111,17 +111,16 @@ model DeductionProfile {
   userId      Int
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   taxYear     Int
-  // personal    Decimal @default(60000) @db.Decimal(10, 2)
   investments UserInvestment[]
 
   @@unique([userId, taxYear])
 }
 
-// 3. ตารางเก็บยอดซื้อจริงของ User (Master-Detail)
+// 3. ตารางเก็บยอดซื้อจริงของ User 
 model UserInvestment {
   id       Int     @id @default(autoincrement())
   amount   Decimal @db.Decimal(10, 2)
-  quantity Int     @default(1) // 👈 เก็บจำนวนคน เช่น ลูกแท้ 2 คน
+  quantity Int     @default(1) // เก็บจำนวนคน เช่น ลูกแท้ 2 คน
 
   profileId  Int
   profile    DeductionProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)

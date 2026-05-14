@@ -46,7 +46,6 @@ const Formdetail = () => {
             const resMaster = await api.get('/fund-types');
             const funds = resMaster.data;
 
-            // ฟังก์ชันช่วยหา ID จาก CODE (Case-Sensitive ตาม Admin)
             const getFundId = (code) => funds.find(f => f.code === code)?.id;
 
             const investments = [];
@@ -67,12 +66,12 @@ const Formdetail = () => {
                 addInv('SPOUSE', 1); // ส่ง 1 คน
             }
 
-            // 👶 ลูก: ส่งเป็น "จำนวนคน" (เพราะ Admin ติ๊ก isCount)
+            // ลูก: ส่งเป็น "จำนวนคน" (เพราะ Admin ติ๊ก isCount)
             if (formData.numChildType1 > 0) addInv('CHILD_BIO_1', formData.numChildType1);
             if (formData.numChildType2 > 0) addInv('CHILD_BIO_261', formData.numChildType2);
             if (formData.childStatus === 'pregnant') addInv('MATERNITY', 1); // ถ้าติ๊กฝากครรภ์
 
-            // 👴 พ่อแม่: ส่งเป็น "จำนวนคน" (ใช้ Code ตาม Admin)
+            // พ่อแม่: ส่งเป็น "จำนวนคน" (ใช้ Code ตาม Admin)
             if (formData.parentsCare === 'father' || formData.parentsCare === 'mother') addInv('PARENT_SELF', 1);
             if (formData.parentsCare === 'both') addInv('PARENT_SELF', 2);
 
@@ -92,7 +91,6 @@ const Formdetail = () => {
             addInv('THAI_ESG', formData.thaiEsg);
             addInv('HOME_LOAN_INT', formData.homeLoanInterest);
 
-            // ✅ ส่งข้อมูลไป Backend
             await api.post('/deduction', { ...formData, investments });
 
             toast.success("บันทึกข้อมูลเรียบร้อย!");
@@ -115,7 +113,6 @@ const Formdetail = () => {
                     ))}
                 </div>
 
-                {/* STEP 1: ตัวตนและรายได้ (1, 2, 4) */}
                 {step === 1 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-5">
                         <h2 className="text-2xl font-black flex items-center gap-3"><User className="text-indigo-600" /> ข้อมูลส่วนตัว</h2>
@@ -134,7 +131,6 @@ const Formdetail = () => {
                     </div>
                 )}
 
-                {/* STEP 2: ครอบครัวและภาระ (3, 5, 6) */}
                 {step === 2 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-5">
                         <h2 className="text-2xl font-black flex items-center gap-3"><Heart className="text-rose-500" /> ครอบครัวและภาระ</h2>
@@ -178,7 +174,6 @@ const Formdetail = () => {
                     </div>
                 )}
 
-                {/* STEP 3: ประกันและสวัสดิการ (7, 8, 9, 10, 12) */}
                 {step === 3 && (
                     <div className="space-y-5 animate-in fade-in slide-in-from-right-5">
                         <h2 className="text-2xl font-black flex items-center gap-3"><ShieldCheck className="text-emerald-500" /> ประกันและสวัสดิการ</h2>
@@ -202,7 +197,6 @@ const Formdetail = () => {
                     </div>
                 )}
 
-                {/* STEP 4: การลงทุนและที่อยู่อาศัย (11, 13) */}
                 {step === 4 && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-5">
                         <h2 className="text-2xl font-black flex items-center gap-3"><TrendingUp className="text-amber-500" /> การลงทุนและบ้าน</h2>

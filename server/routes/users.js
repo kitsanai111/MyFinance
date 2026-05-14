@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { listUsers, changeStatus, changeRole, removeUser, updateProfile, updateUsername } = require('../controllers/users');
-const { authCheck, adminCheck } = require('../middlewares/authCheck'); // อย่าลืมใส่ Middleware นะครับ
+const { authCheck, adminCheck } = require('../middlewares/authCheck'); 
 
 router.get('/users', authCheck, adminCheck, listUsers);
 router.post('/change-status', authCheck, adminCheck, changeStatus);
