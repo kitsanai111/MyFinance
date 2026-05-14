@@ -25,6 +25,7 @@ exports.listUsers = async (req, res) => {
                 role: true,
                 enabled: true,
                 createdAt: true,
+                email: true,
             },
             orderBy: { createdAt: 'desc' }
         });
