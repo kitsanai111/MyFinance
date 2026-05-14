@@ -147,3 +147,26 @@ exports.getActivityLogs = async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 };
+
+exports.changeRole = async (req, res) => {
+    try {
+        const { id, role } = req.body;
+        const requesterRole = req.user.role;
+
+        const targetUser = await prisma.user.findUnique({ where: { id: Number(id) } });
+        if (!targetUser) return res.status(404).json({ message: "ไม่พบผู้ใช้" });
+
+        if (requesterRole === 'admin' && (targetUser.role === 'superadmin' || role === 'superadmin')) {
+            return res.status(403).json({ message: "ไม่มีสิทธิ์เปลี่ยน role นี้" });
+        }
+
+        await prisma.user.update({ where: { id: Number(id) }, data: { role } });
+
+        await createActivityLog(req.user.id, 'CHANGE_ROLE',
+            `เปลี่ยน role "${targetUser.username}": ${targetUser.role} → ${role}`, req);
+
+        res.json({ message: "เปลี่ยน role สำเร็จ" });
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};

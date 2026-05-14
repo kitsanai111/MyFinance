@@ -124,7 +124,7 @@ const DashboardSuperAdmin = () => {
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
-    console.log('users data:', users[0]);
+    // console.log('users data:', users[0]);
     try {
       await api.post('/change-status', { id: userId, enabled: !currentStatus });
       toast.success("อัปเดตสำเร็จ");
@@ -179,6 +179,18 @@ const DashboardSuperAdmin = () => {
       await api.put('/update-username', { userId, username: editingUsername });
       toast.success("แก้ไข username สำเร็จ");
       setEditingUserId(null);
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
+  const handleChangeRole = async (userId, newRole) => {
+    try {
+      await api.put('/change-role', { id: userId, role: newRole });
+      toast.success("เปลี่ยน role สำเร็จ");
+      // อัปเดต selectedUser ให้แสดง role ใหม่ทันที
+      setSelectedUser(prev => ({ ...prev, role: newRole }));
       loadData();
     } catch (err) {
       toast.error(err.response?.data?.message || "เกิดข้อผิดพลาด");
@@ -501,7 +513,20 @@ const DashboardSuperAdmin = () => {
               </div>
               <div className="p-3 bg-gray-50 rounded-xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Role</p>
-                <p className="font-bold text-amber-600 uppercase mt-1">{selectedUser.role}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="font-bold text-amber-600 uppercase">{selectedUser.role}</p>
+                  {selectedUser.id !== currentUser.id && (
+                    <select
+                      value={selectedUser.role}
+                      onChange={(e) => handleChangeRole(selectedUser.id, e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-amber-200 bg-white"
+                    >
+                      <option value="user">USER</option>
+                      <option value="admin">ADMIN</option>
+                      <option value="superadmin">SUPERADMIN</option>
+                    </select>
+                  )}
+                </div>
               </div>
               <div className="p-3 bg-gray-50 rounded-xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase">สถานะ</p>
