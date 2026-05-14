@@ -58,6 +58,7 @@ const DashboardSuperAdmin = () => {
         api.get(`/users?startDate=${startDate}&endDate=${endDate}`),
         api.get('/logs').catch(() => ({ data: [] }))
       ]);
+      console.log("users[0]:", usersRes.data[0]);
       setUsers(usersRes.data);
       setLogs(logsRes.data);
     } catch (err) {
