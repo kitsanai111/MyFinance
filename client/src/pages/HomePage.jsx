@@ -164,7 +164,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- CTA --- */}
       <section className="py-20 px-6">
         <div className={`${gradientBg} max-w-5xl mx-auto rounded-3xl p-14 text-center text-white shadow-2xl`}>
           <h2 className="text-3xl font-bold mb-4">เริ่มจัดการเงินของคุณวันนี้</h2>
@@ -178,9 +177,9 @@ const HomePage = () => {
           </button>
         </div>
       </section>
-      {/* --- Download App --- */}
+
       <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+        <div className="max-w-3xl mx-auto text-center">
 
           {/* TEXT */}
           <div>
