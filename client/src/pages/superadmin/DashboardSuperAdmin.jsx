@@ -123,6 +123,7 @@ const DashboardSuperAdmin = () => {
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
+    console.log('users data:', users[0]);
     try {
       await api.post('/change-status', { id: userId, enabled: !currentStatus });
       toast.success("อัปเดตสำเร็จ");

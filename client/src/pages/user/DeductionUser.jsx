@@ -19,7 +19,6 @@ const DeductionUser = () => {
     const [masterFunds, setMasterFunds] = useState([]);
     const [formCompleted, setFormCompleted] = useState(false);
 
-    // ✅ 1. โหลดข้อมูลและจัดการหน่วย (คน/บาท)
     const fetchDeductions = async () => {
         try {
             const res = await api.get('/deduction');
@@ -36,7 +35,6 @@ const DeductionUser = () => {
 
                 serverInvestments.forEach(inv => {
                     const code = inv.fundType.code;
-                    // 💡 ใช้ค่าดิบจากหลังบ้าน (ที่เราแก้เป็น rawAmount) มาลงช่อง Input
                     initialValues[code] = inv.rawAmount;
                     if (inv.rawAmount > 0) initialEnabled[code] = true;
                 });
@@ -49,7 +47,6 @@ const DeductionUser = () => {
 
     useEffect(() => { fetchDeductions(); }, [token]);
 
-    // ✅ 2. Logic คำนวณยอดรวม (คำนวณเงินจริงจากจำนวนคน)
     const totals = useMemo(() => {
         let normalTotal = 0;
         let retirementSum = 0;
@@ -109,14 +106,12 @@ const DeductionUser = () => {
         });
     };
 
-    // ✅ 3. บันทึกข้อมูล (คูณจำนวนคนกลับเป็นเงินก่อนเซฟ)
     const handleSave = async () => {
         setLoading(true);
         try {
             const payload = {
                 investments: masterFunds.map(f => {
                     const code = f.fundType.code;
-                    // 💡 ส่งค่าที่ User พิมพ์ในช่อง Input ไปเลย ไม่ต้องคูณอะไรทั้งสิ้น!
                     const inputVal = Number(deductions[code] || 0);
 
                     const sendValue = (f.fundType.isFixed && !f.fundType.isCount) ? 1 : inputVal;
@@ -127,7 +122,7 @@ const DeductionUser = () => {
             await api.post('/deduction', payload);
             toast.success("บันทึกสำเร็จ");
             setIsEditing(false);
-            fetchDeductions(); // โหลดข้อมูลใหม่จาก DB มาเช็คความชัวร์
+            fetchDeductions(); 
         } catch (err) {
             console.error(err);
             toast.error("บันทึกไม่สำเร็จ");
@@ -135,12 +130,11 @@ const DeductionUser = () => {
             setLoading(false);
         }
     };
-    // ✅ เพิ่มฟังก์ชันจัดการการพิมพ์ค่า
     const handleValueChange = (e) => {
         const { name, value } = e.target;
         let val = Number(value);
 
-        // 💡 บังคับ Logic คู่สมรส: ถ้าเป็น SPOUSE ให้กรอกได้แค่ 0 หรือ 1
+        // คู่สมรส: ถ้าเป็น SPOUSE ให้กรอกได้แค่ 0 หรือ 1
         if (name === 'SPOUSE') {
             val = val > 1 ? 1 : (val < 0 ? 0 : val);
         } else {
@@ -151,7 +145,6 @@ const DeductionUser = () => {
     };
 
 
-    // ✅ เพิ่มเงื่อนไขเช็ค CODE พิเศษใน ProfileUser.jsx
     const renderSectionItems = (categoryName) => {
         return masterFunds
             .filter(f => f.fundType.category === categoryName)
@@ -159,7 +152,6 @@ const DeductionUser = () => {
                 const { isFixed, isCount, taxLimit, code, name } = f.fundType;
                 const isEnabled = enabledDeductions[code];
 
-                // 💡 1. ย้าย Logic คำนวณ displayValue มาไว้ในนี้
                 let displayValue = 0;
                 if (isEnabled) {
                     // รายการที่ "ล็อค" (PERSONAL / SPOUSE) ให้โชว์ยอดเงินเต็มเสมอ
@@ -180,7 +172,6 @@ const DeductionUser = () => {
                         isEnabled={isEnabled}
                         onToggle={() => {
                             handleToggle(code);
-                            // 🚩 เมื่อติ๊กถูก ให้เซ็ตค่าเริ่มต้นเข้าไป
                             if (!isEnabled) {
                                 setDeductions(prev => ({
                                     ...prev,
@@ -189,7 +180,6 @@ const DeductionUser = () => {
                             }
                         }}
                         onChange={handleValueChange}
-                        // ล็อคช่องถ้า Admin สั่ง Fixed (แต่ยอมให้แก้ถ้าเป็นจำนวนคน เช่น ลูก)
                         disabled={!isEditing || (isFixed && !isCount)}
                         unit={(isCount && code !== 'SPOUSE' && code !== 'PERSONAL') ? "คน" : "THB"}
                         hint={code === 'SPOUSE' ? "สิทธิ์ลดหย่อน 60,000 บาท" : null}
@@ -205,7 +195,6 @@ const DeductionUser = () => {
             </div>
         );
     }
-    // วางไว้หลัง loading check / masterFunds check
     if (!formCompleted) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

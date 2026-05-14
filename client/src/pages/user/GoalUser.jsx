@@ -18,7 +18,7 @@ const GoalUser = () => {
     const [result, setResult] = useState({
         monthlyLimit: 0, dailyLimit: 0, 
         yearsToGoal: 0, monthsToGoal: 0,
-        investYears: 0, investMonths: 0, // ผลลัพธ์แบบทบต้น
+        investYears: 0, investMonths: 0, 
         timeSaved: 0
     });
 
@@ -70,7 +70,7 @@ const GoalUser = () => {
     const handleSaveGoal = async () => {
         if (!salary || !monthlySavings || !totalGoal) return toast.warning("กรุณากรอกข้อมูลให้ครบ");
         
-        // ⚠️ เช็คสิทธิ์ % เงินได้ (สมมติใช้เกณฑ์สูงสุด 30% ตามมาตรฐานกองทุนลดหย่อน)
+        // เช็คสิทธิ์ % เงินได้ 
         const maxAllowedSaving = Number(salary) * 0.30;
         if (Number(monthlySavings) > maxAllowedSaving) {
             toast.info(`คุณออมเกิน 30% ของเงินเดือน (${maxAllowedSaving.toLocaleString()} บาท) อาจใช้สิทธิ์ลดหย่อนภาษีได้ไม่เต็มจำนวน`);
