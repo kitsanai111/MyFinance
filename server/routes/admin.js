@@ -8,6 +8,7 @@ router.get('/users', authCheck, adminCheck, listUsers);
 router.post('/change-status', authCheck, adminCheck, changeUserStatus);
 router.delete('/users/:id', authCheck, adminCheck, removeUser);
 router.get('/logs', authCheck, adminCheck, getActivityLogs);
+router.post('/change-role', authCheck, adminCheck, changeRole);
 
 // เฉพาะ Superadmin เท่านั้น (ใช้จัดการ Admin)
 router.post('/create-admin', authCheck, superAdminCheck, createAdminBySuper);
