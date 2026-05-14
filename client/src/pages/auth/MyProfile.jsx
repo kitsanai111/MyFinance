@@ -4,12 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
-import React, { useEffect, useState } from 'react';
-import { User, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import api from '../../utils/api';
-
 export default function MyProfile() {
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
