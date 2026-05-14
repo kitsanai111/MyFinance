@@ -10,7 +10,7 @@
 //Rmutr 
 // export const BASE_API_URL = "http://172.21.12.33:5001/api"
 
-//Radmin
+//render
 export const BASE_API_URL = "https://myfinance-1-1dq6.onrender.com/api"
 
 

@@ -57,24 +57,24 @@ const HomePage = () => {
             ทั้งบนเว็บไซต์และแอปมือถือ
           </p>
 
-          
-<div className="flex flex-col md:flex-row gap-4 justify-center items-center w-full px-4">
-  
-  <button
-    onClick={() => navigate('/login')}
-    className={`w-full md:w-auto px-8 py-4 ${gradientBg} text-white font-bold rounded-full flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 transition`}
-  >
-    เริ่มต้นใช้งาน <ArrowRight size={20} />
-  </button>
 
-  <button
-    onClick={() => navigate('/register')}
-    className="w-full md:w-auto px-8 py-4 border border-gray-200 rounded-full font-semibold hover:bg-gray-50 transition flex items-center justify-center"
-  >
-    สมัครสมาชิก
-  </button>
-  
-</div>
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center w-full px-4">
+
+            <button
+              onClick={() => navigate('/login')}
+              className={`w-full md:w-auto px-8 py-4 ${gradientBg} text-white font-bold rounded-full flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 transition`}
+            >
+              เริ่มต้นใช้งาน <ArrowRight size={20} />
+            </button>
+
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full md:w-auto px-8 py-4 border border-gray-200 rounded-full font-semibold hover:bg-gray-50 transition flex items-center justify-center"
+            >
+              สมัครสมาชิก
+            </button>
+
+          </div>
 
           {/* Dashboard Mockup */}
           <div className="mt-16 mx-auto max-w-6xl rounded-3xl overflow-hidden shadow-2xl bg-gray-100 p-2">
@@ -138,43 +138,29 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- Mobile App Section (🔥 จุดขายสำคัญ) --- */}
       <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-
-          <div>
-            <h2 className="text-3xl font-bold mb-4">
-              ใช้งานได้ทั้งเว็บ และแอปมือถือ
-            </h2>
-
-            <p className="text-gray-500 mb-6">
-              ไม่ว่าคุณจะอยู่ที่ไหน ก็สามารถบันทึกและติดตามการเงินได้ทันที
-              พร้อมการแจ้งเตือนอัจฉริยะบนมือถือ
-            </p>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Bell className="text-amber-500" />
-                <span>แจ้งเตือนการใช้เงินแบบ Real-time</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Smartphone className="text-amber-500" />
-                <span>ออกแบบสำหรับมือถือโดยเฉพาะ</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <TrendingUp className="text-amber-500" />
-                <span>ติดตามพฤติกรรมการเงินได้ทุกที่</span>
-              </div>
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            ใช้งานได้ทั้งเว็บ และแอปมือถือ
+          </h2>
+          <p className="text-gray-500 mb-6">
+            ไม่ว่าคุณจะอยู่ที่ไหน ก็สามารถบันทึกและติดตามการเงินได้ทันที
+            พร้อมการแจ้งเตือนอัจฉริยะบนมือถือ
+          </p>
+          <div className="space-y-4 inline-block text-left">
+            <div className="flex items-center gap-3">
+              <Bell className="text-amber-500" />
+              <span>แจ้งเตือนการใช้เงินแบบ Real-time</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Smartphone className="text-amber-500" />
+              <span>ออกแบบสำหรับมือถือโดยเฉพาะ</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <TrendingUp className="text-amber-500" />
+              <span>ติดตามพฤติกรรมการเงินได้ทุกที่</span>
             </div>
           </div>
-
-          {/* Phone mock */}
-          <div className="bg-gray-100 h-[400px] rounded-3xl flex items-center justify-center text-gray-400">
-            Mobile App Preview
-          </div>
-
         </div>
       </section>
 
@@ -203,16 +189,11 @@ const HomePage = () => {
             </h2>
 
             <p className="text-gray-500 mb-6">
-              ใช้งานได้ทุกที่ ทุกเวลา รองรับทั้ง iOS และ Android
+              ใช้งานได้ทุกที่ ทุกเวลา
               บันทึกค่าใช้จ่ายได้ทันทีจากมือถือของคุณ
             </p>
 
-            <div className="flex gap-4 flex-wrap">
-              {/* App Store */}
-              <button className="bg-black text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
-                 App Store (Coming Soon)
-              </button>
-
+            <div className="flex gap-4 flex-wrap justify-center">
               {/* Google Play */}
               <button
                 onClick={() => window.open('/filance_app.apk', '_blank')}
@@ -220,11 +201,6 @@ const HomePage = () => {
                 ▶ ดาวน์โหลด Android APK
               </button>
             </div>
-          </div>
-
-          {/* IMAGE / MOCKUP */}
-          <div className="bg-white rounded-3xl shadow-xl h-[350px] flex items-center justify-center text-gray-400">
-            App Preview
           </div>
 
         </div>
