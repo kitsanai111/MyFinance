@@ -608,7 +608,6 @@ export default function FinanceDashboard() {
               <div className="space-y-2">
                 {recent.map(r => (
                   <div key={r.id} className="flex items-center justify-between p-4 rounded-3xl hover:bg-gray-50 transition-all group border border-transparent hover:border-gray-100">
-                    {/* ... (โค้ดแสดงผลรายการ r.type, r.name, r.amount ของนายเหมือนเดิม) ... */}
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm transition-transform group-hover:scale-110 ${r.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
                         {r.type === 'income' ? <ArrowDownRight size={24} /> : <ArrowUpRight size={24} />}
@@ -643,7 +642,6 @@ export default function FinanceDashboard() {
                   </div>
                 ))}
 
-                {/* 🚩 ข้อความเมื่อไม่มีรายการในช่วงเวลานั้น */}
                 {recent.length === 0 && (
                   <div className="text-center py-10 text-gray-400 text-sm font-medium">
                     ยังไม่มีรายการของ{mode === 'day' ? 'วันนี้' : mode === 'week' ? 'สัปดาห์นี้' : 'เดือนนี้'}
@@ -723,7 +721,6 @@ export default function FinanceDashboard() {
                     <button onClick={() => setSelectedDay(null)} className="text-gray-300 hover:text-gray-500 transition-colors text-xl">×</button>
                   </div>
 
-                  {/* รายการ */}
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {selectedDay.entries.map((e, i) => {
                       const catName = mappedCategories.find(c => c.id === e.categoryId)?.name;
@@ -742,7 +739,6 @@ export default function FinanceDashboard() {
                     })}
                   </div>
 
-                  {/* สรุปยอด */}
                   <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between text-sm">
                     {['income', 'expense'].map(t => {
                       const sum = selectedDay.entries.filter(e => e.type === t).reduce((s, e) => s + Number(e.amount), 0);

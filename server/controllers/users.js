@@ -71,3 +71,17 @@ exports.removeUser = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { username } = req.body;
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: { username }
+        });
+        res.json({ message: "อัปเดตสำเร็จ", user: updated });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};

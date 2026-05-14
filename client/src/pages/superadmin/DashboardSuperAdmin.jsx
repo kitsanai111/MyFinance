@@ -32,7 +32,7 @@ const CHART_COLORS = ['#F59E0B', '#6366F1', '#10B981', '#EF4444', '#3B82F6', '#8
 const DashboardSuperAdmin = () => {
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
