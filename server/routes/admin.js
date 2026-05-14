@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { authCheck, adminCheck, superAdminCheck } = require('../middlewares/authCheck');
-const { listUsers, changeUserStatus, removeUser, createAdminBySuper,getActivityLogs } = require('../controllers/adminController');
+const { listUsers, changeUserStatus, removeUser, createAdminBySuper,getActivityLogs ,changeRole} = require('../controllers/adminController');
 
 router.get('/users', authCheck, adminCheck, listUsers);
 router.post('/change-status', authCheck, adminCheck, changeUserStatus);
