@@ -42,6 +42,8 @@ const DashboardSuperAdmin = () => {
   const [adminForm, setAdminForm] = useState({ username: '', email: '', password: '' });
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingUsername, setEditingUsername] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+
 
   const currentUser = useEcomStore((state) => state.user);
 
@@ -361,34 +363,7 @@ const DashboardSuperAdmin = () => {
                         {item.username?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        {editingUserId === item.id ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              value={editingUsername}
-                              onChange={(e) => setEditingUsername(e.target.value)}
-                              className="px-2 py-1 border-2 border-amber-400 rounded-lg text-sm font-bold outline-none w-32"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleUpdateUsername(item.id)}
-                              className="px-2 py-1 bg-amber-400 text-white rounded-lg text-xs font-bold hover:bg-amber-500"
-                            >บันทึก</button>
-                            <button
-                              onClick={() => setEditingUserId(null)}
-                              className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold"
-                            >ยกเลิก</button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-700">{item.username}</p>
-                            <button
-                              onClick={() => { setEditingUserId(item.id); setEditingUsername(item.username); }}
-                              className="text-gray-300 hover:text-amber-500 transition-colors"
-                            >
-                              <Edit3 size={14} />
-                            </button>
-                          </div>
-                        )}
+                        <p className="font-bold text-gray-700">{item.username}</p>
                         <p className="text-[10px] text-gray-400 flex items-center gap-1">
                           <Clock size={10} /> {toThaiLocaleDateString(item.createdAt)}
                         </p>
@@ -408,7 +383,11 @@ const DashboardSuperAdmin = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-300">
-                      <button className="hover:text-amber-500 transition-colors"><FileSearch size={18} /></button>
+                      <button
+                        onClick={() => setSelectedUser(item)}
+                        className="hover:text-amber-500 transition-colors">
+                        <FileSearch size={18} />
+                      </button>
                       <button onClick={() => confirmDelete(item.id, item.role, item.username)}
                         className="hover:text-red-500 transition-colors">
                         <Trash2 size={18} />
@@ -473,6 +452,69 @@ const DashboardSuperAdmin = () => {
         )}
 
       </div>
+      {selectedUser && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-800">ข้อมูล User</h3>
+              <button onClick={() => { setSelectedUser(null); setEditingUserId(null); }} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Username</p>
+                {editingUserId === selectedUser.id ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      value={editingUsername}
+                      onChange={(e) => setEditingUsername(e.target.value)}
+                      className="flex-1 px-2 py-1 border-2 border-amber-400 rounded-lg text-sm font-bold outline-none"
+                      autoFocus
+                    />
+                    <button
+                      onClick={async () => { await handleUpdateUsername(selectedUser.id); setSelectedUser(null); }}
+                      className="px-2 py-1 bg-amber-400 text-white rounded-lg text-xs font-bold"
+                    >บันทึก</button>
+                    <button
+                      onClick={() => setEditingUserId(null)}
+                      className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold"
+                    >ยกเลิก</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="font-bold text-gray-800">{selectedUser.username}</p>
+                    <button
+                      onClick={() => { setEditingUserId(selectedUser.id); setEditingUsername(selectedUser.username); }}
+                      className="text-gray-300 hover:text-amber-500 transition-colors"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Email</p>
+                <p className="font-bold text-gray-800 mt-1">{selectedUser.email}</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Role</p>
+                <p className="font-bold text-amber-600 uppercase mt-1">{selectedUser.role}</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">สถานะ</p>
+                <p className={`font-bold mt-1 ${selectedUser.enabled ? 'text-green-600' : 'text-red-500'}`}>
+                  {selectedUser.enabled ? 'ONLINE' : 'OFFLINE'}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">สมัครเมื่อ</p>
+                <p className="font-bold text-gray-800 mt-1">{toThaiLocaleDateString(selectedUser.createdAt)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

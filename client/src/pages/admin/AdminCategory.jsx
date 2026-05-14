@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { Trash2, PlusCircle, LayoutGrid, Edit3, X, Save, Search } from 'lucide-react'; 
+import Swal from 'sweetalert2';
 
 const AdminCategory = () => {
     const [categories, setCategories] = useState([]);

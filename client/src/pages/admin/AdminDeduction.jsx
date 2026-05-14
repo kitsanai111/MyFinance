@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { PiggyBank, Trash2, Edit3, Save, X, Search, CheckCircle2, Circle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const AdminDeduction = () => {
     const [funds, setFunds] = useState([]);
