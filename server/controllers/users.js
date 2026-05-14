@@ -1,5 +1,6 @@
-// server/controllers/users.js
+
 const prisma = require('../config/prisma'); 
+const { createActivityLog } = require('../middlewares/logger');
 
 
 exports.listUsers = async (req, res) => {
@@ -89,10 +90,20 @@ exports.updateProfile = async (req, res) => {
 exports.updateUsername = async (req, res) => {
     try {
         const { userId, username } = req.body;
+        
+        const oldUser = await prisma.user.findUnique({ where: { id: Number(userId) } });
+        
         await prisma.user.update({
             where: { id: Number(userId) },
             data: { username }
         });
+
+        await createActivityLog(
+            req.user.id,
+            'UPDATE_USERNAME',
+            `เปลี่ยน username "${oldUser.username}" → "${username}"`
+        );
+
         res.json({ message: "แก้ไข username สำเร็จ" });
     } catch (err) {
         res.status(500).json({ message: err.message });
