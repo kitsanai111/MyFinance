@@ -5,7 +5,7 @@ import useEcomStore from '../../store/ecom-store';
 import {
   Search, Trash2, Clock, FileSearch,
   ShieldAlert, FileText, Table as TableIcon,
-  RefreshCw, UserPlus, X, Users, Activity, TrendingUp, PieChart
+  RefreshCw, UserPlus, X, Users, Activity, TrendingUp, PieChart, Edit3
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, PieChart as RechartsPie, Pie, Cell,
@@ -40,6 +40,8 @@ const DashboardSuperAdmin = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [adminForm, setAdminForm] = useState({ username: '', email: '', password: '' });
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editingUsername, setEditingUsername] = useState('');
 
   const currentUser = useEcomStore((state) => state.user);
 
@@ -166,6 +168,18 @@ const DashboardSuperAdmin = () => {
     { name: 'ONLINE', value: users.filter(u => u.enabled).length },
     { name: 'OFFLINE', value: users.filter(u => !u.enabled).length },
   ];
+
+  const handleUpdateUsername = async (userId) => {
+    if (!editingUsername.trim()) return;
+    try {
+      await api.put('/update-username', { userId, username: editingUsername });
+      toast.success("แก้ไข username สำเร็จ");
+      setEditingUserId(null);
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "เกิดข้อผิดพลาด");
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const matchName = user.username?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -347,7 +361,34 @@ const DashboardSuperAdmin = () => {
                         {item.username?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-700">{item.username}</p>
+                        {editingUserId === item.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={editingUsername}
+                              onChange={(e) => setEditingUsername(e.target.value)}
+                              className="px-2 py-1 border-2 border-amber-400 rounded-lg text-sm font-bold outline-none w-32"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleUpdateUsername(item.id)}
+                              className="px-2 py-1 bg-amber-400 text-white rounded-lg text-xs font-bold hover:bg-amber-500"
+                            >บันทึก</button>
+                            <button
+                              onClick={() => setEditingUserId(null)}
+                              className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold"
+                            >ยกเลิก</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-gray-700">{item.username}</p>
+                            <button
+                              onClick={() => { setEditingUserId(item.id); setEditingUsername(item.username); }}
+                              className="text-gray-300 hover:text-amber-500 transition-colors"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                          </div>
+                        )}
                         <p className="text-[10px] text-gray-400 flex items-center gap-1">
                           <Clock size={10} /> {toThaiLocaleDateString(item.createdAt)}
                         </p>
